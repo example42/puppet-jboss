@@ -1,0 +1,20 @@
+# File Managed by Puppet
+
+<VirtualHost *:80>
+    ServerAdmin webmaster@<%= name %>
+    DocumentRoot <%= docroot %>
+    ServerName <%= name %>
+    ErrorLog <%= scope.lookupvar('apache::log_dir') %>/<%= name %>-error_log
+    CustomLog <%= scope.lookupvar('apache::log_dir') %>/<%= name %>-access_log common
+
+    <Directory <%= docroot %>>
+        AllowOverride All
+    </Directory>
+
+    ErrorDocument 401 /
+    ErrorDocument 402 /
+    ErrorDocument 403 /
+    ErrorDocument 404 /
+
+</VirtualHost>
+

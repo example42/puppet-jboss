@@ -1,0 +1,39 @@
+# File Managed by Puppet
+upstream php {
+        server unix:/tmp/php-cgi.socket;
+        server 127.0.0.1:9000;
+}
+ 
+server {
+        server_name <%= name %>
+        root <%= docroot %>
+
+        index index.php;
+ 
+        location = /favicon.ico {
+                log_not_found off;
+                access_log off;
+        }
+ 
+        location = /robots.txt {
+                allow all;
+                log_not_found off;
+                access_log off;
+        }
+ 
+        location / {
+                try_files $uri $uri/ /index.php;
+        }
+ 
+        location ~ \.php$ {
+                #NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
+                include fastcgi.conf;
+                fastcgi_intercept_errors on;
+                fastcgi_pass php;
+        }
+ 
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+                expires max;
+                log_not_found off;
+        }
+}
