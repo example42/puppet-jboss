@@ -27,6 +27,26 @@ class jboss::params {
     default => 'jboss',
   }
 
+  $service = $::operatingsystem ? {
+    default => 'jboss',
+  }
+
+  $service_status = $::operatingsystem ? {
+    default => true,
+  }
+
+  $process = $::operatingsystem ? {
+    default => 'java',
+  }
+
+  $process_args = $::operatingsystem ? {
+    default => 'jboss',
+  }
+
+  $process_user = $::operatingsystem ? {
+    default => 'jboss',
+  }
+
   $config_file_mode = $::operatingsystem ? {
     default => '0644',
   }
@@ -37,6 +57,14 @@ class jboss::params {
 
   $config_file_group = $::operatingsystem ? {
     default => 'root',
+  }
+
+  $pid_file = $::operatingsystem ? {
+    default => '/var/run/jboss.pid',
+  }
+
+  $data_dir = $::operatingsystem ? {
+    default => '/var/lib/jboss',
   }
 
   $log_dir = $::operatingsystem ? {
@@ -58,6 +86,8 @@ class jboss::params {
   $template = ''
   $options = ''
   $absent = false
+  $disable = false
+  $disableboot = false
 
   ### General module variables that can have a site or per module default
   $monitor = false

@@ -24,7 +24,7 @@ class jboss::install inherits jboss {
 
     source: {
       puppi::netinstall { 'netinstall_jboss':
-        url                 => $jboss::install_source,
+        url                 => $jboss::real_install_source,
         destination_dir     => $jboss::real_install_destination,
         extracted_dir       => $jboss::install_dirname,
         preextract_command  => $jboss::install_precommand,
@@ -34,7 +34,7 @@ class jboss::install inherits jboss {
 
     puppi: {
       puppi::project::archive { 'jboss':
-        source                   => $jboss::install_source,
+        source                   => $jboss::real_install_source,
         deploy_root              => $jboss::real_install_destination,
         predeploy_customcommand  => $jboss::install_precommand,
         postdeploy_customcommand => $jboss::install_postcommand,

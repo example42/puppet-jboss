@@ -4,55 +4,95 @@ describe 'jboss' do
 
   let(:title) { 'jboss' }
   let(:node) { 'rspec.example42.com' }
-  let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
+  let(:facts) { { :ipaddress => '10.42.42.42' } }
 
-  describe 'Test standard installation' do
+  describe 'Test standard installation via package' do
+    let(:params) { {:install => 'package' } }
+
     it { should contain_package('jboss').with_ensure('present') }
     it { should contain_file('jboss.conf').with_ensure('present') }
   end
 
-  describe 'Test standard installation with monitoring' do
-    let(:params) { {:monitor => true , :url_check => 'http://jboss.example42.com' } }
-    let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
+  describe 'Test installation via netinstall' do
+    let(:params) { {:version => '6' } }
+    it 'should install version 6 via netinstall' do
+      content = catalogue.resource('puppi::netinstall', 'netinstall_jboss').send(:parameters)[:url]
+      content.should match "http://download.jboss.org/jbossas/6.1/jboss-as-distribution-6.1.0.Final.zip"
+    end
+  end
 
+  describe 'Test installation via puppi' do
+    let(:params) { {:version => '6' , :install => 'puppi' } }
+    it 'should install version 6 via puppi' do
+      content = catalogue.resource('puppi::project::archive', 'jboss').send(:parameters)[:source]
+      content.should match "http://download.jboss.org/jbossas/6.1/jboss-as-distribution-6.1.0.Final.zip"
+    end
+  end
+
+  describe 'Test package installation with monitoring and firewalling' do
+    let(:params) { {:monitor => true , :install => 'package' , :firewall => true, :port => '42', :protocol => 'tcp' } }
+
+    it { should contain_package('jboss').with_ensure('present') }
     it { should contain_file('jboss.conf').with_ensure('present') }
-    it 'should monitor the url' do
-      content = catalogue.resource('monitor::url', 'jboss_url').send(:parameters)[:enable]
+    it 'should monitor the process' do
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
+      content.should == true
+    end
+    it 'should place a firewall rule' do
+      content = catalogue.resource('firewall', 'jboss_tcp_42').send(:parameters)[:enable]
       content.should == true
     end
   end
 
-  describe 'Test source installation' do
-    let(:params) { {:install => 'source' , :web_server => 'apache' } }
-    let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
-
-    it 'should contain a netinstall resource with valid destination_dir' do
-      content = catalogue.resource('puppi::netinstall', 'netinstall_jboss').send(:parameters)[:destination_dir]
-      content.should == '/var/www'
-    end
-  end
-
-  describe 'Test puppi installation' do
-    let(:params) { {:install => 'puppi' , :web_server => 'apache' } }
-    let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
-
-    it 'should contain a puppi  project resource with valid destination_dir' do
-      content = catalogue.resource('puppi::project::archive', 'jboss').send(:parameters)[:deploy_root]
-      content.should == '/var/www'
-    end
-  end
-
   describe 'Test decommissioning - absent' do
-    let(:params) { {:absent => true, :monitor => true } }
-    let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
+    let(:params) { {:absent => true, :install => 'package', :monitor => true , :firewall => true, :port => '42', :protocol => 'tcp'} }
 
     it 'should remove Package[jboss]' do should contain_package('jboss').with_ensure('absent') end 
+    it 'should not enable at boot Service[jboss]' do should contain_service('jboss').with_enable('false') end
     it 'should remove jboss configuration file' do should contain_file('jboss.conf').with_ensure('absent') end
+    it 'should not monitor the process' do
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
+      content.should == false
+    end
+    it 'should remove a firewall rule' do
+      content = catalogue.resource('firewall', 'jboss_tcp_42').send(:parameters)[:enable]
+      content.should == false
+    end
   end
+
+  describe 'Test decommissioning - disable' do
+    let(:params) { {:disable => true, :install => 'package', :monitor => true , :firewall => true, :port => '42', :protocol => 'tcp'} }
+
+    it { should contain_package('jboss').with_ensure('present') }
+    it { should contain_file('jboss.conf').with_ensure('present') }
+    it 'should not monitor the process' do
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
+      content.should == false
+    end
+    it 'should remove a firewall rule' do
+      content = catalogue.resource('firewall', 'jboss_tcp_42').send(:parameters)[:enable]
+      content.should == false
+    end
+  end
+
+  describe 'Test decommissioning - disableboot' do
+    let(:params) { {:disableboot => true, :install => 'package', :monitor => true , :firewall => true, :port => '42', :protocol => 'tcp'} }
+  
+    it { should contain_package('jboss').with_ensure('present') }
+    it 'should not enable at boot Service[jboss]' do should contain_service('jboss').with_enable('false') end
+    it { should contain_file('jboss.conf').with_ensure('present') }
+    it 'should not monitor the process locally' do
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
+      content.should == false
+    end
+    it 'should keep a firewall rule' do
+      content = catalogue.resource('firewall', 'jboss_tcp_42').send(:parameters)[:enable]
+      content.should == true
+    end
+  end 
 
   describe 'Test customizations - template' do
     let(:params) { {:template => "jboss/spec.erb" , :options => { 'opt_a' => 'value_a' } } }
-    let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
 
     it 'should generate a valid template' do
       content = catalogue.resource('file', 'jboss.conf').send(:parameters)[:content]
@@ -67,7 +107,6 @@ describe 'jboss' do
 
   describe 'Test customizations - source' do
     let(:params) { {:source => "puppet://modules/jboss/spec" , :source_dir => "puppet://modules/jboss/dir/spec" , :source_dir_purge => true } }
-    let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
 
     it 'should request a valid source ' do
       content = catalogue.resource('file', 'jboss.conf').send(:parameters)[:source]
@@ -85,8 +124,6 @@ describe 'jboss' do
 
   describe 'Test customizations - custom class' do
     let(:params) { {:my_class => "jboss::spec" } }
-    let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
-
     it 'should automatically include a custom class' do
       content = catalogue.resource('file', 'jboss.conf').send(:parameters)[:content]
       content.should match "fqdn: rspec.example42.com"
@@ -95,7 +132,6 @@ describe 'jboss' do
 
   describe 'Test Puppi Integration' do
     let(:params) { {:puppi => true, :puppi_helper => "myhelper"} }
-    let(:facts) { { :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
 
     it 'should generate a puppi::ze define' do
       content = catalogue.resource('puppi::ze', 'jboss').send(:parameters)[:helper]
@@ -103,42 +139,77 @@ describe 'jboss' do
     end
   end
 
+  describe 'Test Monitoring Tools Integration' do
+    let(:params) { {:monitor => true, :monitor_tool => "puppi" } }
+
+    it 'should generate monitor defines' do
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:tool]
+      content.should == "puppi"
+    end
+  end
+
+  describe 'Test Firewall Tools Integration' do
+    let(:params) { {:firewall => true, :firewall_tool => "iptables" , :protocol => "tcp" , :port => "42" } }
+
+    it 'should generate correct firewall define' do
+      content = catalogue.resource('firewall', 'jboss_tcp_42').send(:parameters)[:tool]
+      content.should == "iptables"
+    end
+  end
+
+  describe 'Test OldGen Module Set Integration' do
+    let(:params) { {:monitor => "yes" , :monitor_tool => "puppi" , :firewall => "yes" , :firewall_tool => "iptables" , :puppi => "yes" , :port => "42" , :protocol => 'tcp' } }
+
+    it 'should generate monitor resources' do
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:tool]
+      content.should == "puppi"
+    end
+    it 'should generate firewall resources' do
+      content = catalogue.resource('firewall', 'jboss_tcp_42').send(:parameters)[:tool]
+      content.should == "iptables"
+    end
+    it 'should generate puppi resources ' do 
+      content = catalogue.resource('puppi::ze', 'jboss').send(:parameters)[:ensure]
+      content.should == "present"
+    end
+  end
+
   describe 'Test params lookup' do
-    let(:facts) { { :monitor => true , :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu'} }
-    let(:params) { { :url_check => 'http://jboss.example42.com' } }
+    let(:facts) { { :monitor => true , :ipaddress => '10.42.42.42' } }
+    let(:params) { { :port => '42' } }
 
     it 'should honour top scope global vars' do
-      content = catalogue.resource('monitor::url', 'jboss_url').send(:parameters)[:enable]
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
       content.should == true
     end
   end
 
   describe 'Test params lookup' do
-    let(:facts) { { :jboss_monitor => true , :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
-    let(:params) { { :url_check => 'http://jboss.example42.com' } }
+    let(:facts) { { :jboss_monitor => true , :ipaddress => '10.42.42.42' } }
+    let(:params) { { :port => '42' } }
 
     it 'should honour module specific vars' do
-      content = catalogue.resource('monitor::url', 'jboss_url').send(:parameters)[:enable]
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
       content.should == true
     end
   end
 
   describe 'Test params lookup' do
-    let(:facts) { { :monitor => false , :jboss_monitor => true , :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
-    let(:params) { { :url_check => 'http://jboss.example42.com' } }
+    let(:facts) { { :monitor => false , :jboss_monitor => true , :ipaddress => '10.42.42.42' } }
+    let(:params) { { :port => '42' } }
 
     it 'should honour top scope module specific over global vars' do
-      content = catalogue.resource('monitor::url', 'jboss_url').send(:parameters)[:enable]
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
       content.should == true
     end
   end
 
   describe 'Test params lookup' do
-    let(:facts) { { :monitor => false , :ipaddress => '10.42.42.42' , :operatingsystem => 'Ubuntu' } }
-    let(:params) { { :monitor => true , :url_check => 'http://jboss.example42.com' } }
+    let(:facts) { { :monitor => false , :ipaddress => '10.42.42.42' } }
+    let(:params) { { :monitor => true , :firewall => true, :port => '42' } }
 
     it 'should honour passed params over global vars' do
-      content = catalogue.resource('monitor::url', 'jboss_url').send(:parameters)[:enable]
+      content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
       content.should == true
     end
   end

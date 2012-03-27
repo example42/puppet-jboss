@@ -88,6 +88,20 @@
 #   Set to 'true' to remove package(s) installed by module
 #   Can be defined also by the variable $jboss_absent
 #
+# [*service_autorestart*]
+#   Automatically restarts the jboss service when there is a change in
+#   configuration files. Default: true, Set to false if you don't want to
+#   automatically restart the service.
+#
+# [*disable*]
+#   Set to 'true' to disable service(s) managed by module
+#   Can be defined also by the (top scope) variable $jboss_disable
+#
+# [*disableboot*]
+#   Set to 'true' to disable service(s) at boot, without checks if it's running
+#   Use this when the service is managed by a tool like a cluster software
+#   Can be defined also by the (top scope) variable $jboss_disableboot
+#
 # [*monitor*]
 #   Set to 'true' to enable monitoring of the services provided by the module
 #   Can be defined also by the variables $jboss_monitor
@@ -119,23 +133,23 @@
 #
 # [*firewall*]
 #   Set to 'true' to enable firewalling of the services provided by the module
-#   Can be defined also by the (top scope) variables $apache_firewall
+#   Can be defined also by the (top scope) variables $jboss_firewall
 #   and $firewall
 #
 # [*firewall_tool*]
 #   Define which firewall tool(s) (ad defined in Example42 firewall module)
-#   you want to use to open firewall for apache port(s)
-#   Can be defined also by the (top scope) variables $apache_firewall_tool
+#   you want to use to open firewall for jboss port(s)
+#   Can be defined also by the (top scope) variables $jboss_firewall_tool
 #   and $firewall_tool
 #
 # [*firewall_src*]
-#   Define which source ip/net allow for firewalling apache. Default: 0.0.0.0/0
-#   Can be defined also by the (top scope) variables $apache_firewall_src
+#   Define which source ip/net allow for firewalling jboss. Default: 0.0.0.0/0
+#   Can be defined also by the (top scope) variables $jboss_firewall_src
 #   and $firewall_src
 #
 # [*firewall_dst*]
 #   Define which destination ip to use for firewalling. Default: $ipaddress
-#   Can be defined also by the (top scope) variables $apache_firewall_dst
+#   Can be defined also by the (top scope) variables $jboss_firewall_dst
 #   and $firewall_dst
 #
 # [*debug*]
@@ -158,6 +172,22 @@
 # [*package*]
 #   The name of jboss package
 #
+# [*service*]
+#   The name of jboss service
+#
+# [*service_status*]
+#   If the jboss service init script supports status argument
+#
+# [*process*]
+#   The name of jboss process
+#
+# [*process_args*]
+#   The name of jboss arguments. Used by puppi and monitor.
+#   Used only in case the jboss process name is generic (java, ruby...)
+#
+# [*process_user*]
+#   The name of the user jboss runs with. Used by puppi and monitor.
+#
 # [*config_dir*]
 #   Main configuration directory. Used by puppi
 #
@@ -173,8 +203,11 @@
 # [*config_file_group*]
 #   Main configuration file path group
 #
+# [*pid_file*]
+#   Path of pid file. Used by monitor
+#
 # [*data_dir*]
-#   Path of application files
+#   Path of application data directory. Used by puppi
 #
 # [*log_dir*]
 #   Base logs directory. Used by puppi
@@ -186,12 +219,12 @@
 #   The listening port, if any, of the service.
 #   This is used by monitor, firewall and puppi (optional) components
 #   Note: This doesn't necessarily affect the service configuration file
-#   Can be defined also by the (top scope) variable $apache_port
+#   Can be defined also by the (top scope) variable $jboss_port
 #
 # [*protocol*]
 #   The protocol used by the the service.
 #   This is used by monitor, firewall and puppi (optional) components
-#   Can be defined also by the (top scope) variable $apache_protocol
+#   Can be defined also by the (top scope) variable $jboss_protocol
 #
 #
 # == Examples
@@ -219,8 +252,11 @@ class jboss (
   $source_dir          = params_lookup( 'source_dir' ),
   $source_dir_purge    = params_lookup( 'source_dir_purge' ),
   $template            = params_lookup( 'template' ),
+  $service_autorestart = params_lookup( 'service_autorestart' , 'global' ),
   $options             = params_lookup( 'options' ),
   $absent              = params_lookup( 'absent' ),
+  $disable             = params_lookup( 'disable' ),
+  $disableboot         = params_lookup( 'disableboot' ),
   $monitor             = params_lookup( 'monitor' , 'global' ),
   $monitor_tool        = params_lookup( 'monitor_tool' , 'global' ),
   $monitor_target      = params_lookup( 'monitor_target' , 'global' ),
@@ -233,12 +269,18 @@ class jboss (
   $debug               = params_lookup( 'debug' , 'global' ),
   $audit_only          = params_lookup( 'audit_only' , 'global' ),
   $package             = params_lookup( 'package' ),
+  $service             = params_lookup( 'service' ),
+  $service_status      = params_lookup( 'service_status' ),
+  $process             = params_lookup( 'process' ),
+  $process_args        = params_lookup( 'process_args' ),
+  $process_user        = params_lookup( 'process_user' ),
   $config_dir          = params_lookup( 'config_dir' ),
   $config_file         = params_lookup( 'config_file' ),
   $config_file_mode    = params_lookup( 'config_file_mode' ),
   $config_file_owner   = params_lookup( 'config_file_owner' ),
   $config_file_group   = params_lookup( 'config_file_group' ),
   $config_file_init    = params_lookup( 'config_file_init' ),
+  $pid_file            = params_lookup( 'pid_file' ),
   $data_dir            = params_lookup( 'data_dir' ),
   $log_dir             = params_lookup( 'log_dir' ),
   $log_file            = params_lookup( 'log_file' ),
@@ -247,12 +289,16 @@ class jboss (
   ) inherits jboss::params {
 
   $bool_source_dir_purge=any2bool($source_dir_purge)
+  $bool_service_autorestart=any2bool($service_autorestart)
   $bool_absent=any2bool($absent)
+  $bool_disable=any2bool($disable)
+  $bool_disableboot=any2bool($disableboot)
   $bool_monitor=any2bool($monitor)
   $bool_puppi=any2bool($puppi)
   $bool_firewall=any2bool($firewall)
   $bool_debug=any2bool($debug)
   $bool_audit_only=any2bool($audit_only)
+
 
   ### Definition of some variables used in the module
   $manage_package = $jboss::bool_absent ? {
@@ -260,18 +306,45 @@ class jboss (
     false => 'present',
   }
 
+  $manage_service_enable = $jboss::bool_disableboot ? {
+    true    => false,
+    default => $jboss::bool_disable ? {
+      true    => false,
+      default => $jboss::bool_absent ? {
+        true  => false,
+        false => true,
+      },
+    },
+  }
+
+  $manage_service_ensure = $jboss::bool_disable ? {
+    true    => 'stopped',
+    default =>  $jboss::bool_absent ? {
+      true    => 'stopped',
+      default => 'running',
+    },
+  }
+
+  $manage_service_autorestart = $jboss::bool_service_autorestart ? {
+    true    => Service[jboss],
+    false   => undef,
+  }
+
   $manage_file = $jboss::bool_absent ? {
     true    => 'absent',
     default => 'present',
   }
 
-  if $jboss::bool_absent == true {
+  if $jboss::bool_absent == true
+  or $jboss::bool_disable == true
+  or $jboss::bool_disableboot == true {
     $manage_monitor = false
   } else {
     $manage_monitor = true
   }
 
-  if $apache::bool_absent == true {
+  if $jboss::bool_absent == true
+  or $jboss::bool_disable == true {
     $manage_firewall = false
   } else {
     $manage_firewall = true
@@ -340,8 +413,11 @@ class jboss (
 
 
   ### Managed resources
-  # Installation is managed in dedicated class
+  # Installation is managed in a dedicated class
   require jboss::install
+
+  # Service is managed in a dedicated class
+  require jboss::service
 
   file { 'jboss.conf':
     ensure  => $jboss::manage_file,
@@ -350,6 +426,7 @@ class jboss (
     owner   => $jboss::config_file_owner,
     group   => $jboss::config_file_group,
     require => Class['jboss::install'],
+    notify  => $jboss::manage_service_autorestart,
     source  => $jboss::manage_file_source,
     content => $jboss::manage_file_content,
     replace => $jboss::manage_file_replace,
@@ -362,6 +439,7 @@ class jboss (
       ensure  => directory,
       path    => $jboss::real_config_dir,
       require => Class['jboss::install'],
+      notify  => $foo::manage_service_autorestart,
       source  => $source_dir,
       recurse => true,
       purge   => $source_dir_purge,
@@ -387,55 +465,6 @@ class jboss (
   }
 
 
-  ### Service monitoring, if enabled ( monitor => true )
-  if $apache::bool_monitor == true {
-    monitor::port { "apache_${apache::protocol}_${apache::port}":
-      protocol => $apache::protocol,
-      port     => $apache::port,
-      target   => $apache::monitor_target,
-      tool     => $apache::monitor_tool,
-      enable   => $apache::manage_monitor,
-    }
-    monitor::process { 'apache_process':
-      process  => $apache::process,
-      service  => $apache::service,
-      pidfile  => $apache::pid_file,
-      user     => $apache::process_user,
-      argument => $apache::process_args,
-      tool     => $apache::monitor_tool,
-      enable   => $apache::manage_monitor,
-    }
-  }
-
-
-  ### Firewall management, if enabled ( firewall => true )
-  if $apache::bool_firewall == true {
-    firewall { "apache_${apache::protocol}_${apache::port}":
-      source      => $apache::firewall_source,
-      destination => $apache::firewall_destination,
-      protocol    => $apache::protocol,
-      port        => $apache::port,
-      action      => 'allow',
-      direction   => 'input',
-      tool        => $apache::firewall_tool,
-      enable      => $apache::manage_firewall,
-    }
-  }
-
-
-  ### Debugging, if enabled ( debug => true )
-  if $apache::bool_debug == true {
-    file { 'debug_apache':
-      ensure  => $apache::manage_file,
-      path    => "${settings::vardir}/debug-apache",
-      mode    => '0640',
-      owner   => 'root',
-      group   => 'root',
-      content => inline_template('<%= scope.to_hash.reject { |k,v| k.to_s =~ /(uptime.*|path|timestamp|free|.*password.*|.*psk.*|.*key)/ }.to_yaml %>'),
-    }
-  }
-
-
   ### Debugging, if enabled ( debug => true )
   if $jboss::bool_debug == true {
     file { 'debug_jboss':
@@ -447,4 +476,5 @@ class jboss (
       content => inline_template('<%= scope.to_hash.reject { |k,v| k.to_s =~ /(uptime.*|path|timestamp|free|.*password.*|.*psk.*|.*key)/ }.to_yaml %>'),
     }
   }
+
 }
