@@ -419,18 +419,20 @@ class jboss (
   # Service is managed in a dedicated class
   require jboss::service
 
-  file { 'jboss.conf':
-    ensure  => $jboss::manage_file,
-    path    => $jboss::real_config_file,
-    mode    => $jboss::config_file_mode,
-    owner   => $jboss::config_file_owner,
-    group   => $jboss::config_file_group,
-    require => Class['jboss::install'],
-    notify  => $jboss::manage_service_autorestart,
-    source  => $jboss::manage_file_source,
-    content => $jboss::manage_file_content,
-    replace => $jboss::manage_file_replace,
-    audit   => $jboss::manage_audit,
+  if ($jboss::source or $jboss::template) {
+    file { 'jboss.conf':
+      ensure  => $jboss::manage_file,
+      path    => $jboss::real_config_file,
+      mode    => $jboss::config_file_mode,
+      owner   => $jboss::config_file_owner,
+      group   => $jboss::config_file_group,
+      require => Class['jboss::install'],
+      notify  => $jboss::manage_service_autorestart,
+      source  => $jboss::manage_file_source,
+      content => $jboss::manage_file_content,
+      replace => $jboss::manage_file_replace,
+      audit   => $jboss::manage_audit,
+    }
   }
 
   # The whole jboss configuration directory can be recursively overriden

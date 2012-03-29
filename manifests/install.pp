@@ -23,13 +23,20 @@ class jboss::install inherits jboss {
     }
 
     source: {
+
+      $created_dirname = url_parse("$jboss::real_install_source",'filedir')
+
       puppi::netinstall { 'netinstall_jboss':
         url                 => $jboss::real_install_source,
         destination_dir     => $jboss::real_install_destination,
-        extracted_dir       => $jboss::install_dirname,
         preextract_command  => $jboss::install_precommand,
         postextract_command => $jboss::install_postcommand,
       }
+
+      file { 'jboss_link':
+        path   => "${jboss::real_install_destination}/${jboss::install_dirname}" ,
+        ensure => "${jboss::real_install_destination}/${created_dirname}" ,
+      } 
     }
 
     puppi: {

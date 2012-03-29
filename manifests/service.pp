@@ -61,8 +61,8 @@ class jboss::service inherits jboss {
   ### Firewall management, if enabled ( firewall => true )
   if $jboss::bool_firewall == true {
     firewall { "jboss_${jboss::protocol}_${jboss::port}":
-      source      => $jboss::firewall_source,
-      destination => $jboss::firewall_destination,
+      source      => $jboss::firewall_src,
+      destination => $jboss::firewall_dst,
       protocol    => $jboss::protocol,
       port        => $jboss::port,
       action      => 'allow',
