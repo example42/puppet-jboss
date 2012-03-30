@@ -10,7 +10,6 @@ describe 'jboss' do
     let(:params) { {:install => 'package' } }
 
     it { should contain_package('jboss').with_ensure('present') }
-    it { should contain_file('jboss.conf').with_ensure('present') }
   end
 
   describe 'Test installation via netinstall' do
@@ -33,7 +32,6 @@ describe 'jboss' do
     let(:params) { {:monitor => true , :install => 'package' , :firewall => true, :port => '42', :protocol => 'tcp' } }
 
     it { should contain_package('jboss').with_ensure('present') }
-    it { should contain_file('jboss.conf').with_ensure('present') }
     it 'should monitor the process' do
       content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
       content.should == true
@@ -49,7 +47,6 @@ describe 'jboss' do
 
     it 'should remove Package[jboss]' do should contain_package('jboss').with_ensure('absent') end 
     it 'should not enable at boot Service[jboss]' do should contain_service('jboss').with_enable('false') end
-    it 'should remove jboss configuration file' do should contain_file('jboss.conf').with_ensure('absent') end
     it 'should not monitor the process' do
       content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
       content.should == false
@@ -64,7 +61,6 @@ describe 'jboss' do
     let(:params) { {:disable => true, :install => 'package', :monitor => true , :firewall => true, :port => '42', :protocol => 'tcp'} }
 
     it { should contain_package('jboss').with_ensure('present') }
-    it { should contain_file('jboss.conf').with_ensure('present') }
     it 'should not monitor the process' do
       content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
       content.should == false
@@ -80,7 +76,6 @@ describe 'jboss' do
   
     it { should contain_package('jboss').with_ensure('present') }
     it 'should not enable at boot Service[jboss]' do should contain_service('jboss').with_enable('false') end
-    it { should contain_file('jboss.conf').with_ensure('present') }
     it 'should not monitor the process locally' do
       content = catalogue.resource('monitor::process', 'jboss_process').send(:parameters)[:enable]
       content.should == false
@@ -123,7 +118,7 @@ describe 'jboss' do
   end
 
   describe 'Test customizations - custom class' do
-    let(:params) { {:my_class => "jboss::spec" } }
+    let(:params) { {:my_class => "jboss::spec" , :template => "jboss/spec.erb"} }
     it 'should automatically include a custom class' do
       content = catalogue.resource('file', 'jboss.conf').send(:parameters)[:content]
       content.should match "fqdn: rspec.example42.com"
