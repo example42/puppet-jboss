@@ -3,19 +3,20 @@
 # Based on init script samples provided in Jboss source
 
 # define where jboss is - this is the directory containing directories log, bin, conf etc
-JBOSS_HOME=${JBOSS_HOME:-"<%= scope.lookupvar('jboss::real_jboss_dir') %>"}
+JBOSS_HOME=${JBOSS_HOME:-"<%= scope.lookupvar('jboss::jboss_dir') %>"}
 
 # define the user under which jboss will run, or use 'RUNASIS' to run as the current user
-JBOSS_USER=${JBOSS_USER:-"<%= scope.lookupvar('jboss::process_user') %>"}
+JBOSS_USER=${JBOSS_USER:-"<%= user %>"}
 
 # make sure java is in your path
 JAVAPTH=${JAVAPTH:-"/usr/local/jdk/bin"}
 
 # configuration to use, usually one of 'minimal', 'default', 'all'
-# JBOSS_CONF=${JBOSS_CONF:-""}
+JBOSS_CONF=${JBOSS_CONF:-"<%= name %>"}
 
 # if JBOSS_HOST specified, use -b to bind jboss services to that address
-JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= scope.lookupvar('jboss::bindaddr') %>"}
+#JBOSS_BIND_ADDR=${JBOSS_HOST:+"-b <%= bindaddr %>"}
+JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= bindaddr %>"}
 
 # define the classpath for the shutdown class
 JBOSSCP=${JBOSSCP:-"$JBOSS_HOME/bin/shutdown.jar:$JBOSS_HOME/client/jnet.jar"}
@@ -24,8 +25,8 @@ JBOSSCP=${JBOSSCP:-"$JBOSS_HOME/bin/shutdown.jar:$JBOSS_HOME/client/jnet.jar"}
 JBOSSSH=${JBOSSSH:-"$JBOSS_HOME/bin/run.sh -c $JBOSS_CONF $JBOSS_BIND_ADDR"}
 
 # Lock and Pid files
-LOCKFILE=/var/lock/subsys/jboss
-PIDFILE=<%= scope.lookupvar('jboss::pid_file') %>.pid
+LOCKFILE=/var/lock/subsys/jboss-<%= name %>
+PIDFILE=/var/run/jboss-<%= name %>.pid
 
 if [ "$JBOSS_USER" = "RUNASIS" ]; then
   SUBIT=""
@@ -51,7 +52,13 @@ fi
 JBOSS_CONSOLE=${JBOSS_CONSOLE:-"/dev/null"}
 
 # Jboss Start command
+<% if scope.lookupvar('run_conf') != "" -%>
+# Custom, per instance, run.conf configured via Puppet
+JBOSS_CMD_START="cd $JBOSS_HOME/bin; export RUN_CONF=<%= scope.lookupvar('jboss::jboss_dir') %>/server/<%= name %>/run.conf ; $JBOSSSH"
+<% else -%>
 JBOSS_CMD_START="cd $JBOSS_HOME/bin; $JBOSSSH"
+<% end -%>
+
 
 JBOSS_CMD_STOP=${JBOSS_CMD_STOP:-"java -classpath $JBOSSCP org.jboss.Shutdown --shutdown"}
 
@@ -72,11 +79,11 @@ status () {
     return 0
   fi
   if [ -f $PIDFILE ]; then
-    echo "jboss dead but pid file exists ($PIDFILE) result: 1"
+    echo "jboss dead but pid file exists result: 1"
     return 1
   fi
   if [ -f $LOCKFILE ]; then
-    echo "jboss dead but subsys locked ($LOCKFILE) result: 2"
+    echo "jboss dead but subsys locked result: 2"
     return 2
   fi
   echo "jboss is stopped result: 3"

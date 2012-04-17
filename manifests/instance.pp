@@ -24,7 +24,7 @@
 #   Default: jboss. You can have multiple instances using the same group but
 #   only one has the createuser parameters set to true.
 #
-# [*userid*]
+# [*groupid*]
 #   The groupid to force for your group. Default in unset (OS will decide)
 #
 # [*createuser*]
@@ -113,7 +113,7 @@ define jboss::instance (
   conf_dir      = '',
   deploy_dir    = '',
   deployers_dir = '',
-  init_template = 'jboss/jboss.init.erb',
+  init_template = 'jboss/jboss.init-instance.erb',
   enable        = true
   ) {
 

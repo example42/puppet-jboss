@@ -47,6 +47,19 @@
 #   Check jboss/manifests/params.pp before overriding the default settings
 #   Can be defined also by the variable $jboss_install_postcommand
 #
+# [*init_script_template*]
+#   The template to use to create the init script (when installation is not
+#   made via packages).
+#
+# [*bindaddr*]
+#   Bind address of Jboss . Default 127.0.0.1
+#
+# [*mode*]
+#   Jboss Mode.
+#   - On Jboss 7 refers to operating mode:
+#     Possible values: standalone (default) , domain
+#   - On earling versions refers to the server template to use
+#     Possible values: default (default) , all , minimal
 #
 # Standard class parameters
 # Define the general class behaviour and customizations
@@ -247,6 +260,9 @@ class jboss (
   $install_dirname     = params_lookup( 'install_dirname' ),
   $install_precommand  = params_lookup( 'install_precommand' ),
   $install_postcommand = params_lookup( 'install_postcommand' ),
+  $init_script_template = params_lookup( 'init_script_template' ),
+  $bindaddr            = params_lookup( 'bindaddr' ),
+  $mode                = params_lookup( 'mode' ),
   $my_class            = params_lookup( 'my_class' ),
   $source              = params_lookup( 'source' ),
   $source_dir          = params_lookup( 'source_dir' ),
@@ -381,6 +397,16 @@ class jboss (
     default => $jboss::install_source,
   }
 
+  $real_init_script_template = $jboss::init_script_template ? {
+    ''      => $jboss::version ? {
+      '4' => 'jboss/jboss6.init.erb',
+      '5' => 'jboss/jboss6.init.erb',
+      '6' => 'jboss/jboss6.init.erb',
+      '7' => 'jboss/jboss7.init.erb',
+    },
+    default => $jboss::init_script_template,
+  }
+
   $real_install_destination = $jboss::install_destination ? {
     ''      => '/usr/local',
     default => $jboss::install_destination,
@@ -388,8 +414,23 @@ class jboss (
 
   $real_jboss_dir = "$real_install_destination/jboss"
 
+  $real_mode = $mode ? {
+    ''      => $jboss::version ? {
+      '4' => 'default',
+      '5' => 'default',
+      '6' => 'default',
+      '7' => 'standalone',
+    },
+    default => $jboss::mode,
+  }
+
   $real_config_file = $jboss::config_file ? {
-    ''      => "${jboss::real_jboss_dir}/server/default/conf/jboss-service.xml",
+    ''      => $jboss::version ? {
+      '4' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf/jboss-service.xml",
+      '5' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf/jboss-service.xml",
+      '6' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf/jboss-service.xml",
+      '7' => "${jboss::real_jboss_dir}/${jboss::real_mode}/configuration/${jboss::real_mode}.xml",
+    },
     default => $jboss::config_file,
   }
 
@@ -398,15 +439,27 @@ class jboss (
       package => $::operatingsystem ? {
         default => '/etc/jboss/',
       },
-      default => "${jboss::real_jboss_dir}/server/default/conf",
+      default => $jboss::version ? {
+        '4' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf",
+        '5' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf",
+        '6' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf",
+        '7' => "${jboss::real_jboss_dir}/${jboss::real_mode}/configuration",
+      },
     },
     default => $jboss::config_dir,
   }
 
   $real_data_dir = $jboss::data_dir ? {
     ''      => $jboss::install ? {
-      package => '/usr/share/jboss',
-      default => "${jboss::real_jboss_dir}/server/default/webapps",
+      package => $::operatingsystem ? {
+        default => '/usr/share/jboss/',
+      },
+      default => $jboss::version ? {
+        '4' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/webapps",
+        '5' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/webapps",
+        '6' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/webapps",
+        '7' => "${jboss::real_jboss_dir}/${jboss::real_mode}/deployments",
+      },
     },
     default => $jboss::data_dir,
   }

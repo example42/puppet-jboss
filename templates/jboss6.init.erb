@@ -12,7 +12,7 @@ JBOSS_USER=${JBOSS_USER:-"<%= scope.lookupvar('jboss::process_user') %>"}
 JAVAPTH=${JAVAPTH:-"/usr/local/jdk/bin"}
 
 # configuration to use, usually one of 'minimal', 'default', 'all'
-# JBOSS_CONF=${JBOSS_CONF:-""}
+JBOSS_CONF=${JBOSS_CONF:-"<%= scope.lookupvar('jboss::real_mode') %>"}
 
 # if JBOSS_HOST specified, use -b to bind jboss services to that address
 JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= scope.lookupvar('jboss::bindaddr') %>"}
@@ -24,7 +24,7 @@ JBOSSCP=${JBOSSCP:-"$JBOSS_HOME/bin/shutdown.jar:$JBOSS_HOME/client/jnet.jar"}
 JBOSSSH=${JBOSSSH:-"$JBOSS_HOME/bin/run.sh -c $JBOSS_CONF $JBOSS_BIND_ADDR"}
 
 # Lock and Pid files
-LOCKFILE=/var/lock/subsys/jboss
+LOCKFILE=/var/lock/jboss
 PIDFILE=<%= scope.lookupvar('jboss::pid_file') %>.pid
 
 if [ "$JBOSS_USER" = "RUNASIS" ]; then
@@ -72,11 +72,11 @@ status () {
     return 0
   fi
   if [ -f $PIDFILE ]; then
-    echo "jboss dead but pid file exists ($PIDFILE) result: 1"
+    echo "jboss dead but pid file ( $PIDFILE ) exists result: 1
     return 1
   fi
   if [ -f $LOCKFILE ]; then
-    echo "jboss dead but subsys locked ($LOCKFILE) result: 2"
+    echo "jboss dead but subsys ( $LOCKFILE ) locked result: 2"
     return 2
   fi
   echo "jboss is stopped result: 3"

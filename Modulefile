@@ -1,5 +1,5 @@
 name    'lab42-jboss'
-version '2.0.5'
+version '2.0.7'
 author  'Alessandro Franceschi'
 license 'Apache2'
 project_page 'http://www.example42.com'
