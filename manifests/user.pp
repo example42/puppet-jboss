@@ -13,6 +13,7 @@ class jboss::user inherits jboss {
     comment    => "${jboss::process_user} user",
     password   => '!',
     managehome => true,
+    home       => $jboss::real_jboss_dir,
     shell      => '/bin/bash',
     before     => Group['jboss'] ,
   }
