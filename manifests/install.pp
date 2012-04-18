@@ -26,6 +26,8 @@ class jboss::install inherits jboss {
 
       $created_dirname = url_parse($jboss::real_install_source,'filedir')
 
+      require jboss::user
+
       puppi::netinstall { 'netinstall_jboss':
         url                 => $jboss::real_install_source,
         destination_dir     => $jboss::real_install_destination,
@@ -33,6 +35,7 @@ class jboss::install inherits jboss {
         postextract_command => $jboss::install_postcommand,
         owner               => $jboss::process_user,
         group               => $jboss::process_user,
+        require                  => User[$jboss::process_user],
       }
 
       file { 'jboss_link':
@@ -42,6 +45,9 @@ class jboss::install inherits jboss {
     }
 
     puppi: {
+
+      require jboss::user
+
       puppi::project::archive { 'jboss':
         source                   => $jboss::real_install_source,
         deploy_root              => $jboss::real_install_destination,
@@ -51,7 +57,9 @@ class jboss::install inherits jboss {
         report_email             => 'root',
         auto_deploy              => true,
         enable                   => true,
+        require                  => User[$jboss::process_user],
       }
+
     }
 
     default: { }

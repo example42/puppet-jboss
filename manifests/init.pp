@@ -408,7 +408,7 @@ class jboss (
   }
 
   $real_install_destination = $jboss::install_destination ? {
-    ''      => '/usr/local',
+    ''      => '/opt',
     default => $jboss::install_destination,
   }
 
