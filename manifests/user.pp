@@ -12,7 +12,7 @@ class jboss::user inherits jboss {
     ensure     => $jboss::manage_file,
     comment    => "${jboss::process_user} user",
     password   => '!',
-    managehome => true,
+    managehome => false,
     home       => $jboss::real_jboss_dir,
     shell      => '/bin/bash',
     before     => Group['jboss'] ,
