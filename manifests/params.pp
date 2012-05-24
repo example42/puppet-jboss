@@ -20,6 +20,8 @@ class jboss::params {
   $install_dirname = 'jboss'
   $install_precommand = ''
   $install_postcommand = ''
+  $user_uid = undef
+  $user_gid = undef
   $init_script_template = ''
   $bindaddr = '127.0.0.1'
   $mode = ''

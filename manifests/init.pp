@@ -47,6 +47,12 @@
 #   Check jboss/manifests/params.pp before overriding the default settings
 #   Can be defined also by the variable $jboss_install_postcommand
 #
+# [*user_uid*]
+#   The uid of the jboss user ($process_user). Default: undefined
+#
+# [*user_gid*]
+#   The gid of the jboss user ($process_user). Default: undefined
+#
 # [*init_script_template*]
 #   The template to use to create the init script (when installation is not
 #   made via packages).
@@ -260,6 +266,8 @@ class jboss (
   $install_dirname     = params_lookup( 'install_dirname' ),
   $install_precommand  = params_lookup( 'install_precommand' ),
   $install_postcommand = params_lookup( 'install_postcommand' ),
+  $user_uid            = params_lookup( 'user_uid' ),
+  $user_gid            = params_lookup( 'user_gid' ),
   $init_script_template = params_lookup( 'init_script_template' ),
   $bindaddr            = params_lookup( 'bindaddr' ),
   $mode                = params_lookup( 'mode' ),

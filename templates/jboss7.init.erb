@@ -3,9 +3,20 @@
 <% if operatingsystem == 'RedHat' or operatingsystem == 'CentOS' or operatingsystem == 'Scientific' %>
 # jboss        Startup script for JBoss
 #
-# chkconfig: - 85 15
+# chkconfig: - 80 20
 # description: Jboss is an Application Server
+
+. /etc/init.d/functions
+
 <% elsif operatingsystem == 'Debian' or operatingsystem == 'Ubuntu' or operatingsystem == 'Mint' %>
+# Poor man alternatives to RedHat init functions
+success () {
+  echo "OK"
+}
+
+failure () {
+  echo "FAILURE"
+}
 <% end %>
 ### BEGIN INIT INFO
 # Provides:          jboss
@@ -25,21 +36,26 @@ JBOSS_USER=${JBOSS_USER:-"<%= scope.lookupvar('jboss::process_user') %>"}
 # make sure java is in your path
 JAVAPTH=${JAVAPTH:-"/usr/local/jdk/bin"}
 
-# configuration to use
-JBOSS_CONF=${JBOSS_CONF:-"<%= scope.lookupvar('jboss::real_mode') %>.xml"}
-
 # if JBOSS_HOST specified, use -b to bind jboss services to that address
 JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= scope.lookupvar('jboss::bindaddr') %>"}
 
-# define the script to use to stop jboss
-JBOSSCP=${JBOSSCP:-"$JBOSS_HOME/bin/jboss-admin.sh -- --connect command=:shutdown"}
+# configuration to use
+JBOSS_CONFIG=${JBOSS_CONFIG:-"<%= scope.lookupvar('jboss::real_mode') %>.xml"}
 
 # define the script to use to start jboss
-JBOSSSH=${JBOSSSH:-"$JBOSS_HOME/bin/<%= scope.lookupvar('jboss::real_mode') %>.sh -c $JBOSS_CONF $JBOSS_BIND_ADDR"}
+JBOSS_SCRIPT="$JBOSS_HOME/bin/<%= scope.lookupvar('jboss::real_mode') %>.sh $JBOSS_BIND_ADDR"
 
-# Lock and Pid files
-LOCKFILE=/var/lock/jboss
-PIDFILE=<%= scope.lookupvar('jboss::pid_file') %>.pid
+# Pid file
+JBOSS_PIDFILE=<%= scope.lookupvar('jboss::pid_file') %>
+
+# Startup and Shutdown times
+if [ -z "$STARTUP_WAIT" ]; then
+  STARTUP_WAIT=30
+fi
+
+if [ -z "$SHUTDOWN_WAIT" ]; then
+  SHUTDOWN_WAIT=30
+fi
 
 if [ "$JBOSS_USER" = "RUNASIS" ]; then
   SUBIT=""
@@ -47,27 +63,9 @@ else
   SUBIT="su - $JBOSS_USER -c "
 fi
 
-if [ -n "$JBOSS_CONSOLE" -a ! -d "$JBOSS_CONSOLE" ]; then
-  # ensure the file exists
-  touch $JBOSS_CONSOLE
-  if [ ! -z "$SUBIT" ]; then
-    chown $JBOSS_USER $JBOSS_CONSOLE
-  fi 
+if [ -z "$JBOSS_CONSOLE_LOG" ]; then
+  JBOSS_CONSOLE_LOG=<%= scope.lookupvar('jboss::log_dir') %>/console.log
 fi
-
-if [ -n "$JBOSS_CONSOLE" -a ! -f "$JBOSS_CONSOLE" ]; then
-  echo "WARNING: location for saving console log invalid: $JBOSS_CONSOLE"
-  echo "WARNING: ignoring it and using /dev/null"
-  JBOSS_CONSOLE="/dev/null"
-fi
-
-#define what will be done with the console log
-JBOSS_CONSOLE=${JBOSS_CONSOLE:-"/dev/null"}
-
-# Jboss Start command
-JBOSS_CMD_START="cd $JBOSS_HOME/bin; $JBOSSSH"
-
-JBOSS_CMD_STOP=${JBOSS_CMD_STOP:-"java -classpath $JBOSSCP org.jboss.Shutdown --shutdown"}
 
 if [ -z "`echo $PATH | grep $JAVAPTH`" ]; then
   export PATH=$PATH:$JAVAPTH
@@ -80,50 +78,95 @@ fi
 
 
 status () {
-  pslist=$( ps -ef | grep java | grep $JBOSS_USER | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
-  if [ -n "$pslist" ]; then
-    echo "jboss (pid $pslist) is running result: 0"
-    return 0
+  if [ -f $JBOSS_PIDFILE ]; then
+    read ppid < $JBOSS_PIDFILE
+    if [ `ps --pid $ppid 2> /dev/null | grep -c $ppid 2> /dev/null` -eq '1' ]; then
+      success
+      echo "$prog is running (pid $ppid)"
+      return 0
+    else
+      failure
+      echo "$prog dead but pid file exists ($JBOSS_PIDFILE) "
+      return 1
+    fi
   fi
-  if [ -f $PIDFILE ]; then
-    echo "jboss dead but pid file ( $PIDFILE ) exists result: 1"
-    return 1
-  fi
-  if [ -f $LOCKFILE ]; then
-    echo "jboss dead but subsys ( $LOCKFILE ) locked result: 2"
-    return 2
-  fi
-  echo "jboss is stopped result: 3"
+  echo "$prog is not running"
   return 3
 }
 
 start () {
-  if [ -f $LOCKFILE ]; then
-    status
-    exit
-  fi
-  cd $JBOSS_HOME/bin
-  echo JBOSS_CMD_START = $JBOSS_CMD_START
-  if [ -z "$SUBIT" ]; then
-    eval $JBOSS_CMD_START >${JBOSS_CONSOLE} 2>&1 &
-    if [ "$?" -eq 0 ]; then
-      touch $LOCKFILE
-    fi
-  else
-    $SUBIT "$JBOSS_CMD_START >${JBOSS_CONSOLE} 2>&1 &"
-    if [ "$?" -eq 0 ]; then
-      touch $LOCKFILE
+  echo -n "Starting $prog: "
+  if [ -f $JBOSS_PIDFILE ]; then
+    read ppid < $JBOSS_PIDFILE
+    if [ `ps --pid $ppid 2> /dev/null | grep -c $ppid 2> /dev/null` -eq '1' ]; then
+      echo -n "$prog is already running"
+      # failure
+      echo
+      return 1 
+    else
+      rm -f $JBOSS_PIDFILE
     fi
   fi
+  mkdir -p $(dirname $JBOSS_CONSOLE_LOG)
+  cat /dev/null > $JBOSS_CONSOLE_LOG
+
+  mkdir -p $(dirname $JBOSS_PIDFILE)
+  chown $JBOSS_USER $(dirname $JBOSS_PIDFILE) || true
+  #$CMD_PREFIX JBOSS_PIDFILE=$JBOSS_PIDFILE $JBOSS_SCRIPT 2>&1 > $JBOSS_CONSOLE_LOG &
+  #$CMD_PREFIX JBOSS_PIDFILE=$JBOSS_PIDFILE $JBOSS_SCRIPT &
+
+  if [ ! -z "$JBOSS_USER" ]; then
+    if [ -x /etc/rc.d/init.d/functions ]; then
+      daemon --user $JBOSS_USER LAUNCH_JBOSS_IN_BACKGROUND=1 JBOSS_PIDFILE=$JBOSS_PIDFILE $JBOSS_SCRIPT -c $JBOSS_CONFIG 2>&1 > $JBOSS_CONSOLE_LOG &
+    else
+      su - $JBOSS_USER -c "LAUNCH_JBOSS_IN_BACKGROUND=1 JBOSS_PIDFILE=$JBOSS_PIDFILE $JBOSS_SCRIPT -c $JBOSS_CONFIG" 2>&1 > $JBOSS_CONSOLE_LOG &
+    fi
+  fi
+
+  count=0
+  launched=false
+
+  until [ $count -gt $STARTUP_WAIT ]
+  do
+    grep 'JBoss AS.*started in' $JBOSS_CONSOLE_LOG > /dev/null 
+    if [ $? -eq 0 ] ; then
+      launched=true
+      break
+    fi 
+    sleep 1
+    let count=$count+1;
+  done
+  
+  success
+  echo
+  return 0
+
 }
 
 stop () {
-  echo JBOSS_CMD_STOP = $JBOSS_CMD_STOP
-  if [ -z "$SUBIT" ]; then
-    $JBOSS_CMD_STOP && rm -f $LOCKFILE
-  else
-    $SUBIT "$JBOSS_CMD_STOP" && rm -f $LOCKFILE
+  echo -n $"Stopping Jboss: "
+  count=0;
+
+  if [ -f $JBOSS_PIDFILE ]; then
+    read kpid < $JBOSS_PIDFILE
+    let kwait=$SHUTDOWN_WAIT
+
+    # Try issuing SIGTERM
+
+    kill -15 $kpid
+    until [ `ps --pid $kpid 2> /dev/null | grep -c $kpid 2> /dev/null` -eq '0' ] || [ $count -gt $kwait ]
+    do
+      sleep 1
+      let count=$count+1;
+    done
+
+    if [ $count -gt $kwait ]; then
+      kill -9 $kpid
+    fi
   fi
+  rm -f $JBOSS_PIDFILE && rm -f $LOCKFILE
+  success
+  echo
 }
 
 case "$1" in
