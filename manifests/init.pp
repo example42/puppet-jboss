@@ -505,7 +505,7 @@ class jboss (
       notify  => $foo::manage_service_autorestart,
       source  => $source_dir,
       recurse => true,
-      purge   => $source_dir_purge,
+      purge   => $jboss::bool_source_dir_purge,
       replace => $jboss::manage_file_replace,
       audit   => $jboss::manage_audit,
     }
