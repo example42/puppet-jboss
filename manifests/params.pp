@@ -23,6 +23,7 @@ class jboss::params {
   $user_uid = undef
   $user_gid = undef
   $init_script_template = ''
+  $conf_script_template = ''
   $bindaddr = '127.0.0.1'
   $mode = ''
 

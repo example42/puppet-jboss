@@ -57,6 +57,10 @@
 #   The template to use to create the init script (when installation is not
 #   made via packages).
 #
+# [*conf_script_template*]
+#   The template to use to create the configuration script imported by the
+#   Jboss startup shell script. Default: undefined
+#
 # [*bindaddr*]
 #   Bind address of Jboss . Default 127.0.0.1
 #
@@ -269,6 +273,7 @@ class jboss (
   $user_uid            = params_lookup( 'user_uid' ),
   $user_gid            = params_lookup( 'user_gid' ),
   $init_script_template = params_lookup( 'init_script_template' ),
+  $conf_script_template = params_lookup( 'conf_script_template' ),
   $bindaddr            = params_lookup( 'bindaddr' ),
   $mode                = params_lookup( 'mode' ),
   $my_class            = params_lookup( 'my_class' ),
@@ -442,6 +447,13 @@ class jboss (
     default => $jboss::config_file,
   }
 
+  $real_conf_script_path = $jboss::version ? {
+    '4' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/bin/run.conf",
+    '5' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/bin/run.conf",
+    '6' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/bin/run.conf",
+    '7' => "${jboss::real_jboss_dir}/bin/${jboss::real_mode}.conf",
+  }
+
   $real_config_dir = $jboss::config_dir ? {
     ''      => $jboss::install ? {
       package => $::operatingsystem ? {
@@ -511,6 +523,20 @@ class jboss (
     }
   }
 
+  if $jboss::conf_script_template {
+    file { 'jboss.script.conf':
+      ensure  => $jboss::manage_file,
+      path    => $jboss::real_conf_script_path,
+      mode    => $jboss::config_file_mode,
+      owner   => $jboss::config_file_owner,
+      group   => $jboss::config_file_group,
+      require => Class['jboss::install'],
+      notify  => $jboss::manage_service_autorestart,
+      content => template($jboss::conf_script_template),
+      replace => $jboss::manage_file_replace,
+      audit   => $jboss::manage_audit,
+    }
+  }
 
   ### Include custom class if $my_class is set
   if $jboss::my_class {
