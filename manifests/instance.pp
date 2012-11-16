@@ -101,20 +101,20 @@
 #    }
 #
 define jboss::instance (
-  user          = 'jboss',
-  userid        = '',
-  group         = 'jboss',
-  groupid       = '',
-  createuser    = true,
-  template      = 'default',
-  bindaddr      = '127.0.0.1',
-  port          = '8080',
-  run_conf      = '',
-  conf_dir      = '',
-  deploy_dir    = '',
-  deployers_dir = '',
-  init_template = 'jboss/jboss.init-instance.erb',
-  enable        = true
+  $user          = 'jboss',
+  $userid        = '',
+  $group         = 'jboss',
+  $groupid       = '',
+  $createuser    = true,
+  $template      = 'default',
+  $bindaddr      = '127.0.0.1',
+  $port          = '8080',
+  $run_conf      = '',
+  $conf_dir      = '',
+  $deploy_dir    = '',
+  $deployers_dir = '',
+  $init_template = 'jboss/jboss.init-instance.erb',
+  $enable        = true
   ) {
 
   require jboss::params
