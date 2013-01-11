@@ -18,19 +18,19 @@ For detailed info about the logic and usage patterns of Example42 modules read R
 
 * Install jboss using your distro package, if available
 
-        class { "jboss": }
+        class { 'jboss': }
 
 * Install the latest jboss version from upstream site
 
-        class { "jboss":
-          install             => "source",
+        class { 'jboss':
+          install             => 'source',
         }
 
 * Install the latest jboss version from upstream site using puppi. 
   You will have a 'puppi deploy jboss' to deploy and update jboss.
 
-        class { "jboss":
-          install             => "puppi",
+        class { 'jboss':
+          install             => 'puppi',
         }
 
 * Install source from a custom url to a custom install_destination path.
@@ -40,20 +40,29 @@ For detailed info about the logic and usage patterns of Example42 modules read R
   Pre and post installation commands may be already defined (check jboss/manifests/params.pp) override them only if needed.
   Url_check and url_pattern are used for application checks, if monitor is enabled. Override only if needed.
 
-        class { "jboss":
-          install             => "source",
-          install_source      => "http://deploy.example42.com/jboss/jboss.tar.gz",
+        class { 'jboss':
+          install             => 'source',
+          install_source      => 'http://deploy.example42.com/jboss/jboss.tar.gz',
+        }
+
+* Install Jboss 7 (by default Jboss 6 is installed)
+  Versions 4, 5, 6, and 7 are supported for source or puppi installation
+  (Note: Not all the combinations have been tested)
+
+        class { 'jboss':
+          install             => 'source',
+          version             => '7',
         }
 
 * Remove jboss
 
-        class { "jboss":
+        class { 'jboss':
           absent => true
         }
 
 * Enable auditing without without making changes on existing jboss configuration files
 
-        class { "jboss":
+        class { 'jboss':
           audit_only => true
         }
 
@@ -61,21 +70,21 @@ For detailed info about the logic and usage patterns of Example42 modules read R
 == USAGE - Overrides and Customizations
 * Use custom sources for main config file 
 
-        class { "jboss":
+        class { 'jboss':
           source => [ "puppet:///modules/lab42/jboss/wp-config.php-${hostname}" , "puppet:///modules/lab42/jboss/wp-config.php" ], 
         }
 
 
 * Use custom source directory for the whole configuration dir
 
-        class { "jboss":
-          source_dir       => "puppet:///modules/lab42/jboss/conf/",
+        class { 'jboss':
+          source_dir       => 'puppet:///modules/lab42/jboss/conf/',
           source_dir_purge => false, # Set to true to purge any existing file not present in $source_dir
         }
 
 * Use custom template for main config file 
 
-        class { "jboss":
+        class { 'jboss':
           template => "example42/jboss/wp-config.php.erb",      
         }
 
@@ -90,23 +99,23 @@ For detailed info about the logic and usage patterns of Example42 modules read R
 * Activate puppi (recommended, but disabled by default)
   Note that this option requires the usage of Example42 puppi module
 
-        class { "jboss": 
+        class { 'jboss': 
           puppi    => true,
         }
 
 * Activate puppi and use a custom puppi_helper template (to be provided separately with
   a puppi::helper define ) to customize the output of puppi commands 
 
-        class { "jboss":
+        class { 'jboss':
           puppi        => true,
-          puppi_helper => "myhelper", 
+          puppi_helper => 'myhelper', 
         }
 
 * Activate automatic monitoring (recommended, but disabled by default)
   This option requires the usage of Example42 monitor and relevant monitor tools modules
 
-        class { "jboss":
+        class { 'jboss':
           monitor      => true,
-          monitor_tool => [ "nagios" , "puppi" ],
+          monitor_tool => [ 'nagios' , 'puppi' ],
         }
 

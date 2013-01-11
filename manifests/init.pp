@@ -28,12 +28,17 @@
 #
 # [*install_destination*]
 #   The base path where to extract the source tarball/zip.
-#   Used if install => "source" or "puppi"
+#   Used if install => "source" or "puppi". Default /opt
 #   Can be defined also by the variable $jboss_install_destination
 #
 # [*install_dirname*]
+#   Name of the jboss directory. A link in install_destination with this name
+#   and pointing to the created_dirname is created during puppi or source
+#   installation. Default jboss (So by default you have /opt/jboss)
+#
+# [*created_dirname*]
 #   Name of the directory created by the source tarball/zip
-#   Default is based on the official sources. You hardly need to override it
+#   Default is based on the official sources. You hardly need to override it#
 #
 # [*install_precommand*]
 #   A custom command to execute before installing the source tarball/zip.
@@ -46,6 +51,11 @@
 #   Used if install => "source" or "puppi"
 #   Check jboss/manifests/params.pp before overriding the default settings
 #   Can be defined also by the variable $jboss_install_postcommand
+#
+# [*manage_user*]
+#   Define if the Jboss user has to be automatically created on puppi/source
+#   installation. Default: true. Set to false if you manage user jboss
+#   in other ways (note: As user as defined in process_user (jboss) must exist)
 #
 # [*user_uid*]
 #   The uid of the jboss user ($process_user). Default: undefined
@@ -268,8 +278,10 @@ class jboss (
   $install_source      = params_lookup( 'install_source' ),
   $install_destination = params_lookup( 'install_destination' ),
   $install_dirname     = params_lookup( 'install_dirname' ),
+  $created_dirname     = params_lookup( 'created_dirname' ),
   $install_precommand  = params_lookup( 'install_precommand' ),
   $install_postcommand = params_lookup( 'install_postcommand' ),
+  $manage_user         = params_lookup( 'manage_user' ),
   $user_uid            = params_lookup( 'user_uid' ),
   $user_gid            = params_lookup( 'user_gid' ),
   $init_script_template = params_lookup( 'init_script_template' ),
@@ -317,6 +329,7 @@ class jboss (
   $protocol            = params_lookup( 'protocol' )
   ) inherits jboss::params {
 
+  $bool_manage_user=any2bool($manage_user)
   $bool_source_dir_purge=any2bool($source_dir_purge)
   $bool_service_autorestart=any2bool($service_autorestart)
   $bool_absent=any2bool($absent)
@@ -399,13 +412,26 @@ class jboss (
     default   => template($jboss::template),
   }
 
-  ### Calculations of variables whoe value depends on different params
+  ### Calculations of variables whose value depends on different params
+  # If this seems complex... you are right, but managing automatically different
+  # versions and cases IS complex...
+
   $real_install_source = $jboss::install_source ? {
     ''      => $jboss::version ? {
       '4' => 'http://sourceforge.net/projects/jboss/files/JBoss/JBoss-4.2.3.GA/jboss-4.2.3.GA.zip/download',
       '5' => 'http://sourceforge.net/projects/jboss/files/JBoss/JBoss-5.1.0.GA/jboss-5.1.0.GA.zip/download',
       '6' => 'http://download.jboss.org/jbossas/6.1/jboss-as-distribution-6.1.0.Final.zip',
       '7' => 'http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/jboss-as-7.1.1.Final.zip',
+    },
+    default => $jboss::install_source,
+  }
+
+  $real_created_dirname = $jboss::created_dirnamee ? {
+    ''      => $jboss::version ? {
+      '4' => 'jboss-4.2.3.GA',
+      '5' => 'jboss-5.1.0.GA',
+      '6' => 'jboss-as-6.1.0.Final',
+      '7' => 'jboss-as-7.1.1.Final',
     },
     default => $jboss::install_source,
   }
@@ -426,6 +452,11 @@ class jboss (
   }
 
   $real_jboss_dir = "$real_install_destination/jboss"
+
+  $real_install_postcommand = $jboss::install_postcommand ? {
+    ''      => "chown -R ${jboss::process_user} ${jboss::real_install_destination}/${jboss::real_created_dirname}",
+    default => $jboss::install_postcommand,
+  }
 
   $real_mode = $mode ? {
     ''      => $jboss::version ? {

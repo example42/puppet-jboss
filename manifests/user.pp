@@ -17,14 +17,8 @@ class jboss::user inherits jboss {
     gid        => $jboss::user_gid,
     home       => $jboss::real_jboss_dir,
     shell      => '/bin/bash',
-    require    => Group['jboss'] ,
-  }
-  @group { $jboss::process_user :
-    ensure     => $jboss::manage_file,
-    gid        => $jboss::user_gid,
   }
 
   User <| title == $jboss::process_user |>
-  Group <| title == $jboss::process_user |>
 
 }

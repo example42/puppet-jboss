@@ -18,8 +18,10 @@ class jboss::params {
   $version = '6'
   $install = 'source'
   $install_dirname = 'jboss'
+  $created_dirname = ''
   $install_precommand = ''
   $install_postcommand = ''
+  $manage_user = true
   $user_uid = undef
   $user_gid = undef
   $init_script_template = ''

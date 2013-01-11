@@ -24,42 +24,47 @@ class jboss::install inherits jboss {
 
     source: {
 
-      $created_dirname = url_parse($jboss::real_install_source,'filedir')
-
-      require jboss::user
+      if $jboss::bool_manage_user {
+        require jboss::user
+      }
 
       puppi::netinstall { 'netinstall_jboss':
         url                 => $jboss::real_install_source,
         destination_dir     => $jboss::real_install_destination,
         preextract_command  => $jboss::install_precommand,
-        postextract_command => $jboss::install_postcommand,
-        owner               => $jboss::process_user,
-        group               => $jboss::process_user,
-        require                  => User[$jboss::process_user],
+        postextract_command => $jboss::real_install_postcommand,
+        owner               => 'root',
+        require             => User[$jboss::process_user],
       }
 
       file { 'jboss_link':
-        ensure => "${jboss::real_install_destination}/${created_dirname}" ,
+        ensure => "${jboss::real_install_destination}/${jboss::real_created_dirname}" ,
         path   => "${jboss::real_install_destination}/${jboss::install_dirname}" ,
       } 
     }
 
     puppi: {
 
-      require jboss::user
+      if $jboss::bool_manage_user {
+        require jboss::user
+      }
 
       puppi::project::archive { 'jboss':
         source                   => $jboss::real_install_source,
         deploy_root              => $jboss::real_install_destination,
         predeploy_customcommand  => $jboss::install_precommand,
-        postdeploy_customcommand => $jboss::install_postcommand,
-        user                     => $jboss::process_user,
+        postdeploy_customcommand => $real_install_postcommand,
+        user                     => 'root',
         report_email             => 'root',
         auto_deploy              => true,
         enable                   => true,
         require                  => User[$jboss::process_user],
       }
 
+      file { 'jboss_link':
+        ensure => "${jboss::real_install_destination}/${jboss::real_created_dirname}" ,
+        path   => "${jboss::real_install_destination}/${jboss::install_dirname}" ,
+      } 
     }
 
     default: { }
