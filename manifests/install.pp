@@ -58,6 +58,7 @@ class jboss::install inherits jboss {
         report_email             => 'root',
         auto_deploy              => true,
         enable                   => true,
+        run_checks               => false,
         require                  => User[$jboss::process_user],
       }
 

@@ -430,7 +430,7 @@ class jboss (
     ''      => $jboss::version ? {
       '4' => 'jboss-4.2.3.GA',
       '5' => 'jboss-5.1.0.GA',
-      '6' => 'jboss-as-6.1.0.Final',
+      '6' => 'jboss-6.1.0.Final',
       '7' => 'jboss-as-7.1.1.Final',
     },
     default => $jboss::install_source,

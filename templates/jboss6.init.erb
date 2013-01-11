@@ -86,7 +86,7 @@ status () {
     return 0
   fi
   if [ -f $PIDFILE ]; then
-    echo "jboss dead but pid file ( $PIDFILE ) exists result: 1
+    echo "jboss dead but pid file ( $PIDFILE ) exists result: 1"
     return 1
   fi
   if [ -f $LOCKFILE ]; then
