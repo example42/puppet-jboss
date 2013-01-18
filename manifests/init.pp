@@ -426,7 +426,7 @@ class jboss (
     default => $jboss::install_source,
   }
 
-  $real_created_dirname = $jboss::created_dirnamee ? {
+  $real_created_dirname = $jboss::created_dirname ? {
     ''      => $jboss::version ? {
       '4' => 'jboss-4.2.3.GA',
       '5' => 'jboss-5.1.0.GA',
