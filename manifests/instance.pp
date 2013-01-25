@@ -114,12 +114,14 @@ define jboss::instance (
   $deploy_dir    = '',
   $deployers_dir = '',
   $init_template = 'jboss/jboss.init-instance.erb',
-  $enable        = true
+  $enable        = true,
+  $monitor       = $jboss::bool_monitor,
   ) {
 
   require jboss::params
-  $bool_createuser=any2bool($create_user)
+  $bool_createuser=any2bool($createuser)
   $bool_enable=any2bool($enable)
+  $bool_monitor=any2bool($monitor)
   $ensure=bool2ensure($enable)
 
   $instance_dir="${jboss::real_jboss_dir}/server/${name}"
@@ -252,12 +254,12 @@ define jboss::instance (
       port     => $port,
       target   => $bindaddr,
       enable   => $enable,
-      tool     => $monitor_tool,
+      tool     => $jboss::monitor_tool,
     }
   }
 
   # Puppi addons, if puppi is enabled
-  if ($puppi == "yes") and ($enable == true) {
+  if ($jboss::puppi == "yes") and ($enable == true) {
   }
 
 }

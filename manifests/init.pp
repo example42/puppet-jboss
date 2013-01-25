@@ -545,7 +545,7 @@ class jboss (
       ensure  => directory,
       path    => $jboss::real_config_dir,
       require => Class['jboss::install'],
-      notify  => $foo::manage_service_autorestart,
+      notify  => $jboss::manage_service_autorestart,
       source  => $source_dir,
       recurse => true,
       purge   => $jboss::bool_source_dir_purge,
