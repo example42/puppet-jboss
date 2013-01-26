@@ -1,11 +1,13 @@
+<% if operatingsystem == 'RedHat' or operatingsystem == 'CentOS' or operatingsystem == 'Scientific' %>
 #!/bin/sh
 # File Managed by Puppet
-<% if operatingsystem == 'RedHat' or operatingsystem == 'CentOS' or operatingsystem == 'Scientific' %>
 # jboss        Startup script for JBoss
 #
 # chkconfig: - 85 15
 # description: Jboss is an Application Server
 <% elsif operatingsystem == 'Debian' or operatingsystem == 'Ubuntu' or operatingsystem == 'Mint' %>
+#!/bin/bash
+# File Managed by Puppet
 <% end %>
 ### BEGIN INIT INFO
 # Provides:          jboss

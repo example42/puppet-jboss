@@ -1,6 +1,6 @@
+<% if operatingsystem == 'RedHat' or operatingsystem == 'CentOS' or operatingsystem == 'Scientific' %>
 #!/bin/sh
 # File Managed by Puppet
-<% if operatingsystem == 'RedHat' or operatingsystem == 'CentOS' or operatingsystem == 'Scientific' %>
 # jboss        Startup script for JBoss
 #
 # chkconfig: - 80 20
@@ -9,6 +9,8 @@
 . /etc/init.d/functions
 
 <% elsif operatingsystem == 'Debian' or operatingsystem == 'Ubuntu' or operatingsystem == 'Mint' %>
+#!/bin/bash
+# File Managed by Puppet
 # Poor man alternatives to RedHat init functions
 success () {
   echo "OK"
