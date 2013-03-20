@@ -433,7 +433,7 @@ class jboss (
       '6' => 'jboss-6.1.0.Final',
       '7' => 'jboss-as-7.1.1.Final',
     },
-    default => $jboss::install_source,
+    default => $jboss::created_dirname,
   }
 
   $real_init_script_template = $jboss::init_script_template ? {
