@@ -123,7 +123,11 @@ define jboss::instance (
   $bool_enable=any2bool($enable)
   $bool_monitor=any2bool($monitor)
   $ensure=bool2ensure($enable)
-
+  $service_ensure = $bool_enable ? {
+    true  => 'running',
+    false => undef,
+  }
+  
   $instance_dir="${jboss::real_jboss_dir}/server/${name}"
 
   if ($bool_enable == true) {
@@ -149,7 +153,7 @@ define jboss::instance (
 
   # Manage Instance service
   service { "jboss-$name":
-    ensure     => $ensure,
+    ensure     => $service_ensure,
     enable     => $bool_enable,
     hasrestart => true,
     hasstatus  => true,
@@ -198,6 +202,7 @@ define jboss::instance (
   # Manage custom run.conf , if defined
   if ($run_conf != "") and ($enable == true) {
     file { "jboss_run_conf_${name}":
+      ensure  => $ensure,
       path    => "${instance_dir}/run.conf",
       owner   => $user,
       group   => $group,
@@ -210,6 +215,7 @@ define jboss::instance (
   # Manage conf dir, if defined
   if ($conf_dir != "") and ($enable == true) {
     file { "jboss_confdir_${name}":
+      ensure  => directory,
       path    => "${instance_dir}/conf/",
       owner   => $user,
       group   => $group,
@@ -224,6 +230,7 @@ define jboss::instance (
   # Manage deploy dir, if defined
   if ($deploy_dir != "") and ($enable == true) {
     file { "jboss_deploydir_${name}":
+      ensure  => directory,
       path    => "${instance_dir}/deploy/",
       owner   => $user,
       group   => $group,
@@ -238,6 +245,7 @@ define jboss::instance (
   # Manage deployers dir, if defined
   if ($deployers_dir != "") and ($enable == true) {
     file { "jboss_deployersdir_${name}":
+      ensure  => directory,
       path    => "${instance_dir}/deployers/",
       owner   => $user,
       group   => $group,
@@ -258,10 +266,6 @@ define jboss::instance (
       enable   => $enable,
       tool     => $jboss::monitor_tool,
     }
-  }
-
-  # Puppi addons, if puppi is enabled
-  if ($jboss::puppi == "yes") and ($enable == true) {
   }
 
 }
