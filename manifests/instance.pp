@@ -135,8 +135,8 @@ define jboss::instance (
     exec { "Clone_Jboss_Instance_$name":
       command  => "cp -a ${template} ${name}",
       cwd      => "${jboss::real_jboss_dir}/server/",
-      creates  => "${jboss::real_jboss_dir}/server/${name}",
       path     => '/sbin:/bin:/usr/sbin:/usr/bin',
+      creates  => "${jboss::real_jboss_dir}/server/${name}",
       timeout  => 3600,
       require  => Exec['Extract_Jboss'],
     }
