@@ -132,6 +132,7 @@ define jboss::instance (
       command  => "cp -a ${template} ${name}",
       cwd      => "${jboss::real_jboss_dir}/server/",
       creates  => "${jboss::real_jboss_dir}/server/${name}",
+      path     => '/sbin:/bin:/usr/sbin:/usr/bin',
       timeout  => 3600,
       require  => Exec['Extract_Jboss'],
     }
@@ -139,6 +140,7 @@ define jboss::instance (
     exec { "Set_Jboss_Instance_Permissions_$name":
       command  => "chown -R ${user}:${group} ${instance_dir} && touch ${instance_dir}/.permissions_set",
       cwd      => "${jboss::real_jboss_dir}/server",
+      path     => '/sbin:/bin:/usr/sbin:/usr/bin',
       creates  => "${instance_dir}/.permissions_set",
       timeout  => 3600,
       require  => [ Exec["Clone_Jboss_Instance_$name"] , User["${user}"] , Group["$group"] ]
