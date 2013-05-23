@@ -127,7 +127,7 @@ define jboss::instance (
     true  => 'running',
     false => undef,
   }
-  
+
   $instance_dir="${jboss::real_jboss_dir}/server/${name}"
 
   if ($bool_enable == true) {
@@ -138,7 +138,7 @@ define jboss::instance (
       path     => '/sbin:/bin:/usr/sbin:/usr/bin',
       creates  => "${jboss::real_jboss_dir}/server/${name}",
       timeout  => 3600,
-      require  => Class['jboss'],
+      require  => Class['jboss::install'],
     }
 
     $exec_perms_require = $bool_createuser ? {
@@ -263,7 +263,7 @@ define jboss::instance (
 
   # Automatic monitoring, if enabled
   if $bool_monitor == true {
-    monitor::port { "jboss_${jboss::protocol}_${port}": 
+    monitor::port { "jboss_${jboss::protocol}_${bindaddr}_${port}":
       protocol => $jboss::protocol,
       port     => $port,
       target   => $bindaddr,

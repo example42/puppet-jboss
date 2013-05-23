@@ -17,7 +17,7 @@
 ### END INIT INFO
 
 # define where jboss is - this is the directory containing directories log, bin, conf etc
-JBOSS_HOME=${JBOSS_HOME:-"<%= scope.lookupvar('jboss::jboss_dir') %>"}
+JBOSS_HOME=${JBOSS_HOME:-"<%= scope.lookupvar('jboss::real_jboss_dir') %>"}
 
 # define the user under which jboss will run, or use 'RUNASIS' to run as the current user
 JBOSS_USER=${JBOSS_USER:-"<%= user %>"}
@@ -39,7 +39,7 @@ JBOSSCP=${JBOSSCP:-"$JBOSS_HOME/bin/shutdown.jar:$JBOSS_HOME/client/jnet.jar"}
 JBOSSSH=${JBOSSSH:-"$JBOSS_HOME/bin/run.sh -c $JBOSS_CONF $JBOSS_BIND_ADDR"}
 
 # Lock and Pid files
-LOCKFILE=/var/lock/subsys/jboss-<%= name %>
+LOCKFILE=/var/lock/jboss-<%= name %>
 PIDFILE=/var/run/jboss-<%= name %>.pid
 
 if [ "$JBOSS_USER" = "RUNASIS" ]; then
@@ -53,7 +53,7 @@ if [ -n "$JBOSS_CONSOLE" -a ! -d "$JBOSS_CONSOLE" ]; then
   touch $JBOSS_CONSOLE
   if [ ! -z "$SUBIT" ]; then
     chown $JBOSS_USER $JBOSS_CONSOLE
-  fi 
+  fi
 fi
 
 if [ -n "$JBOSS_CONSOLE" -a ! -f "$JBOSS_CONSOLE" ]; then
@@ -74,8 +74,6 @@ JBOSS_CMD_START="cd $JBOSS_HOME/bin; $JBOSSSH"
 <% end -%>
 
 
-JBOSS_CMD_STOP=${JBOSS_CMD_STOP:-"java -classpath $JBOSSCP org.jboss.Shutdown --shutdown"}
-
 if [ -z "`echo $PATH | grep $JAVAPTH`" ]; then
   export PATH=$PATH:$JAVAPTH
 fi
@@ -87,7 +85,7 @@ fi
 
 
 status () {
-  pslist=$( ps -ef | grep java | grep $JBOSS_USER | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+  pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
   if [ -n "$pslist" ]; then
     echo "jboss (pid $pslist) is running result: 0"
     return 0
@@ -125,11 +123,23 @@ start () {
 }
 
 stop () {
-  echo JBOSS_CMD_STOP = $JBOSS_CMD_STOP
-  if [ -z "$SUBIT" ]; then
-    $JBOSS_CMD_STOP && rm -f $LOCKFILE
-  else
-    $SUBIT "$JBOSS_CMD_STOP" && rm -f $LOCKFILE
+  [ "$1" -eq "$1" ] 2> /dev/null && timeout=$1 || timeout=0
+  pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+  if [ ! -z "$pslist" ]; then
+    kill $pslist
+    seconds=0
+    while [ "$(ps -A -o pid= | grep -q $pslist ; echo $?)" = "0" ]; do
+      echo "JBoss still running..."
+      sleep 1
+      seconds=$(expr $seconds + 1)
+      if [ $seconds -ge $timeout ] && [ $timeout -gt 0 ]
+       then
+        kill -9 $pslist
+        break
+      fi
+    done
+    rm -f $LOCKFILE
+    echo "JBoss stopped!"
   fi
 }
 
@@ -138,17 +148,16 @@ start)
     start
     ;;
 stop)
-    stop
+    stop $2
     ;;
 restart)
-    stop
-    sleep 15
+    stop $2
     start
     ;;
 status)
     status
     ;;
 *)
-    echo "usage: $0 (start|stop|restart|status|help)"
+    echo "usage: $0 (start|stop [timeout in seconds]|restart [timeout in seconds]|status|help)"
 esac
 

@@ -66,12 +66,30 @@ For detailed info about the logic and usage patterns of Example42 modules read R
           audit_only => true
         }
 
-
-## USAGE - Overrides and Customizations
-* Use custom sources for main config file 
+* Manage different Jboss Instances
 
         class { 'jboss':
-          source => [ "puppet:///modules/lab42/jboss/wp-config.php-${hostname}" , "puppet:///modules/lab42/jboss/wp-config.php" ], 
+          disable  => true, # Jboss main service is disabled
+        }
+
+        jboss::instance { 'app1':
+          create_user => false, # Default user jboss is already created by jboss class
+          bindaddr    => '127.0.0.1',
+          port        => '8080',
+        }
+
+        jboss::instance { 'app2':
+          user     => 'app2',
+          bindaddr => '127.0.0.1',
+          port     => '8081', # You can't have, obviously, 2 instances binding to the same address and port
+        }
+
+
+## USAGE - Overrides and Customizations
+* Use custom sources for main config file
+
+        class { 'jboss':
+          source => [ "puppet:///modules/lab42/jboss/wp-config.php-${hostname}" , "puppet:///modules/lab42/jboss/wp-config.php" ],
         }
 
 
@@ -82,10 +100,10 @@ For detailed info about the logic and usage patterns of Example42 modules read R
           source_dir_purge => false, # Set to true to purge any existing file not present in $source_dir
         }
 
-* Use custom template for main config file 
+* Use custom template for main config file
 
         class { 'jboss':
-          template => "example42/jboss/wp-config.php.erb",      
+          template => "example42/jboss/wp-config.php.erb",
         }
 
 * Automaticallly include a custom subclass
