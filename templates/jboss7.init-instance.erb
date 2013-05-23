@@ -1,0 +1,160 @@
+#!/bin/sh
+# File Managed by Puppet
+<% if operatingsystem == 'RedHat' or operatingsystem == 'CentOS' or operatingsystem == 'Scientific' %>
+# jboss-<%= name %>        Startup script for JBoss Instance <%= name %>
+#
+# chkconfig: - 85 15
+# description: Jboss is an Application Server
+<% elsif operatingsystem == 'Debian' or operatingsystem == 'Ubuntu' or operatingsystem == 'Mint' %>
+<% end %>
+### BEGIN INIT INFO
+# Provides:          jboss-<%= name %>
+# Required-Start:    $local_fs $remote_fs $network 
+# Required-Stop:     $local_fs $remote_fs $network 
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/stop jboss-<%= name %> service
+### END INIT INFO
+
+# define where jboss is - this is the directory containing directories log, bin, conf etc
+JBOSS_HOME=${JBOSS_HOME:-"<%= scope.lookupvar('jboss::real_jboss_dir') %>"}
+
+# define the user under which jboss will run, or use 'RUNASIS' to run as the current user
+JBOSS_USER=${JBOSS_USER:-"<%= user %>"}
+
+# make sure java is in your path
+JAVAPTH=${JAVAPTH:-"/usr/local/jdk/bin"}
+
+# configuration to use, usually one of 'minimal', 'default', 'all'
+JBOSS_CONF=${JBOSS_CONF:-"<%= name %>"}
+
+# if JBOSS_HOST specified, use -b to bind jboss services to that address
+#JBOSS_BIND_ADDR=${JBOSS_HOST:+"-b <%= bindaddr %>"}
+JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= bindaddr %>"}
+
+# define the script to use to start jboss
+JBOSSSH=${JBOSSSH:-"$JBOSS_HOME/bin/<%= scope.lookupvar('jboss::real_mode') %>.sh -c $JBOSS_CONF $JBOSS_BIND_ADDR"}
+
+# Lock and Pid files
+LOCKFILE=/var/lock/jboss-<%= name %>
+PIDFILE=/var/run/jboss-<%= name %>.pid
+
+if [ "$JBOSS_USER" = "RUNASIS" ]; then
+  SUBIT=""
+else
+  SUBIT="su - $JBOSS_USER -c "
+fi
+
+if [ -n "$JBOSS_CONSOLE" -a ! -d "$JBOSS_CONSOLE" ]; then
+  # ensure the file exists
+  touch $JBOSS_CONSOLE
+  if [ ! -z "$SUBIT" ]; then
+    chown $JBOSS_USER $JBOSS_CONSOLE
+  fi
+fi
+
+if [ -n "$JBOSS_CONSOLE" -a ! -f "$JBOSS_CONSOLE" ]; then
+  echo "WARNING: location for saving console log invalid: $JBOSS_CONSOLE"
+  echo "WARNING: ignoring it and using /dev/null"
+  JBOSS_CONSOLE="/dev/null"
+fi
+
+#define what will be done with the console log
+JBOSS_CONSOLE=${JBOSS_CONSOLE:-"/dev/null"}
+
+# Jboss Start command
+<% if scope.lookupvar('run_conf') != "" -%>
+# Custom, per instance, run.conf configured via Puppet
+JBOSS_CMD_START="cd $JBOSS_HOME/bin; export RUN_CONF=<%= scope.lookupvar('jboss::jboss_dir') %>/<%= name %>/run.conf ; $JBOSSSH"
+<% else -%>
+JBOSS_CMD_START="cd $JBOSS_HOME/bin; $JBOSSSH"
+<% end -%>
+
+
+if [ -z "`echo $PATH | grep $JAVAPTH`" ]; then
+  export PATH=$PATH:$JAVAPTH
+fi
+
+if [ ! -d "$JBOSS_HOME" ]; then
+  echo JBOSS_HOME does not exist as a valid directory : $JBOSS_HOME
+  exit 1
+fi
+
+
+status () {
+  pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+  if [ -n "$pslist" ]; then
+    echo "jboss (pid $pslist) is running result: 0"
+    return 0
+  fi
+  if [ -f $PIDFILE ]; then
+    echo "jboss dead but pid file exists result: 1"
+    return 1
+  fi
+  if [ -f $LOCKFILE ]; then
+    echo "jboss dead but subsys locked result: 2"
+    return 2
+  fi
+  echo "jboss is stopped result: 3"
+  return 3
+}
+
+start () {
+  if [ -f $LOCKFILE ]; then
+    status
+    exit
+  fi
+  cd $JBOSS_HOME/bin
+  echo JBOSS_CMD_START = $JBOSS_CMD_START
+  if [ -z "$SUBIT" ]; then
+    eval $JBOSS_CMD_START >${JBOSS_CONSOLE} 2>&1 &
+    if [ "$?" -eq 0 ]; then
+      touch $LOCKFILE
+    fi
+  else
+    $SUBIT "$JBOSS_CMD_START >${JBOSS_CONSOLE} 2>&1 &"
+    if [ "$?" -eq 0 ]; then
+      touch $LOCKFILE
+    fi
+  fi
+}
+
+stop () {
+  [ "$1" -eq "$1" ] 2> /dev/null && timeout=$1 || timeout=0
+  pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+  if [ ! -z "$pslist" ]; then
+    kill $pslist
+    seconds=0
+    while [ "$(ps -A -o pid= | grep -q $pslist ; echo $?)" = "0" ]; do
+      echo "JBoss still running..."
+      sleep 1
+      seconds=$(expr $seconds + 1)
+      if [ $seconds -ge $timeout ] && [ $timeout -gt 0 ]
+       then
+        kill -9 $pslist
+        break
+      fi
+    done
+    rm -f $LOCKFILE
+    echo "JBoss stopped!"
+  fi
+}
+
+case "$1" in
+start)
+    start
+    ;;
+stop)
+    stop $2
+    ;;
+restart)
+    stop $2
+    start
+    ;;
+status)
+    status
+    ;;
+*)
+    echo "usage: $0 (start|stop [timeout in seconds]|restart [timeout in seconds]|status|help)"
+esac
+

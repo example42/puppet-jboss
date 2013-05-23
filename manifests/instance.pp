@@ -34,8 +34,8 @@
 #
 # [*template*]
 #   The base Jboss template to use as model for your instance.
-#   Default: default. Possible values are: all, minimal, standard, default
-#   According to what you find, in a fresh installation, in $jboss_dir/server/
+#   On Jboss 4,5 and 6: Default: default. Possible values are: all, minimal, standard, default
+#   On Jboss 7: Default: standalone. Possible values are: standalone, domain
 #
 # [*bindaddr*]
 #   The address where to bind the Jboss instance. Default: 127.0.0.1
@@ -106,19 +106,19 @@ define jboss::instance (
   $group         = 'jboss',
   $groupid       = '',
   $createuser    = true,
-  $template      = 'default',
+  $template      = '',
   $bindaddr      = '127.0.0.1',
   $port          = '8080',
   $run_conf      = '',
   $conf_dir      = '',
   $deploy_dir    = '',
   $deployers_dir = '',
-  $init_template = 'jboss/jboss.init-instance.erb',
+  $init_template = '',
   $enable        = true,
   $monitor       = $jboss::bool_monitor,
   ) {
 
-  require jboss::params
+  require jboss
   $bool_createuser=any2bool($createuser)
   $bool_enable=any2bool($enable)
   $bool_monitor=any2bool($monitor)
@@ -128,15 +128,35 @@ define jboss::instance (
     false => undef,
   }
 
-  $instance_dir="${jboss::real_jboss_dir}/server/${name}"
+  $real_template = $template ? {
+    ''      => $jboss::version ? {
+      4 => 'default',
+      5 => 'default',
+      6 => 'default',
+      7 => 'standalone',
+    },
+    default => $template,
+  }
+
+  $real_init_template = $init_template ? {
+    ''      => $jboss::version ? {
+      4 => 'jboss/jboss6.init-instance.erb',
+      5 => 'jboss/jboss6.init-instance.erb',
+      6 => 'jboss/jboss6.init-instance.erb',
+      7 => 'jboss/jboss7.init-instance.erb',
+    },
+    default => $init_template,
+  }
+
+  $instance_dir="${jboss::real_instance_basedir}/${name}"
 
   if ($bool_enable == true) {
     # Create custom Instance files
     exec { "Clone_Jboss_Instance_$name":
-      command  => "cp -a ${template} ${name}",
-      cwd      => "${jboss::real_jboss_dir}/server/",
+      command  => "cp -a ${real_template} ${name}",
+      cwd      => $jboss::real_instance_basedir,
       path     => '/sbin:/bin:/usr/sbin:/usr/bin',
-      creates  => "${jboss::real_jboss_dir}/server/${name}",
+      creates  => $instance_dir,
       timeout  => 3600,
       require  => Class['jboss::install'],
     }
@@ -147,7 +167,7 @@ define jboss::instance (
     }
     exec { "Set_Jboss_Instance_Permissions_$name":
       command  => "chown -R ${user}:${group} ${instance_dir} && touch ${instance_dir}/.permissions_set",
-      cwd      => "${jboss::real_jboss_dir}/server",
+      cwd      => $jboss::real_instance_basedir,
       path     => '/sbin:/bin:/usr/sbin:/usr/bin',
       creates  => "${instance_dir}/.permissions_set",
       timeout  => 3600,
@@ -172,7 +192,7 @@ define jboss::instance (
       group   => 'root',
       before  => Service["jboss-$name"],
       notify  => Service["jboss-$name"],
-      content => template("$init_template"),
+      content => template("$real_init_template"),
     }
   }
 

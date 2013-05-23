@@ -490,6 +490,13 @@ class jboss (
     '7' => "${jboss::real_jboss_dir}/bin/${jboss::real_mode}.conf",
   }
 
+  $real_instance_basedir = $jboss::version ? {
+    '4' => "${jboss::real_jboss_dir}/server",
+    '5' => "${jboss::real_jboss_dir}/server",
+    '6' => "${jboss::real_jboss_dir}/server",
+    '7' => "${jboss::real_jboss_dir}",
+  }
+
   $real_config_dir = $jboss::config_dir ? {
     ''      => $jboss::install ? {
       package => $::operatingsystem ? {
