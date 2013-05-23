@@ -128,6 +128,8 @@
 #
 # [*disable*]
 #   Set to 'true' to disable service(s) managed by module
+#   Set to '' to avoid the management of jboss service. Useful when using
+#   multiple instances.
 #   Can be defined also by the (top scope) variable $jboss_disable
 #
 # [*disableboot*]
@@ -368,7 +370,10 @@ class jboss (
   }
 
   $manage_service_autorestart = $jboss::bool_service_autorestart ? {
-    true    => Service[jboss],
+    true    => $disable ? {
+      ''      => undef,
+      default => Service[jboss],
+    },
     false   => undef,
   }
 
@@ -521,7 +526,9 @@ class jboss (
   require jboss::install
 
   # Service is managed in a dedicated class
-  require jboss::service
+  if $disable != '' {
+    require jboss::service
+  }
 
   if ($jboss::source or $jboss::template) {
     file { 'jboss.conf':

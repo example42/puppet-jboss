@@ -69,7 +69,7 @@ For detailed info about the logic and usage patterns of Example42 modules read R
 * Manage different Jboss Instances
 
         class { 'jboss':
-          disable  => true, # Jboss main service is disabled
+          disable  => '', # Jboss main service is not managed
         }
 
         jboss::instance { 'app1':
