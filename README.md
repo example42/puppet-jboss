@@ -73,7 +73,7 @@ For detailed info about the logic and usage patterns of Example42 modules read R
         }
 
         jboss::instance { 'app1':
-          create_user => false, # Default user jboss is already created by jboss class
+          createuser => false, # Default user jboss is already created by jboss class
           bindaddr    => '127.0.0.1',
           port        => '8080',
         }
