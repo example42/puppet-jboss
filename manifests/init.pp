@@ -379,7 +379,7 @@ class jboss (
 
   $manage_file = $jboss::bool_absent ? {
     true    => 'absent',
-    default => 'present',
+    default => 'file',
   }
 
   if $jboss::bool_absent == true
