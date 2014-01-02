@@ -1,13 +1,13 @@
 # File Managed by Puppet
 
 <VirtualHost *:80>
-    ServerAdmin webmaster@<%= name %>
-    DocumentRoot <%= docroot %>
-    ServerName <%= name %>
-    ErrorLog <%= scope.lookupvar('apache::log_dir') %>/<%= name %>-error_log
-    CustomLog <%= scope.lookupvar('apache::log_dir') %>/<%= name %>-access_log common
+    ServerAdmin webmaster@<%= @name %>
+    DocumentRoot <%= @docroot %>
+    ServerName <%= @name %>
+    ErrorLog <%= scope.lookupvar('apache::log_dir') %>/<%= @name %>-error_log
+    CustomLog <%= scope.lookupvar('apache::log_dir') %>/<%= @name %>-access_log common
 
-    <Directory <%= docroot %>>
+    <Directory <%= @docroot %>>
         AllowOverride All
     </Directory>
 
