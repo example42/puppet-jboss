@@ -10,3 +10,4 @@ description 'This module installs and manages jboss. Check README.rdoc for detai
 dependency 'example42/puppi', '>=2.0.0'
 dependency 'example42/firewall', '>=2.0.0'
 dependency 'example42/monitor', '>=2.0.0'
+dependency 'puppetlabs/stdlib', '>= 3.0.0'
