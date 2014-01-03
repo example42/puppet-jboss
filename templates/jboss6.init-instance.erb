@@ -123,7 +123,7 @@ start () {
 }
 
 stop () {
-  [ "$1" -eq "$1" ] 2> /dev/null && timeout=$1 || timeout=0
+  [ "$1" -eq "$1" ] 2> /dev/null && timeout=$1 || timeout=<%= @init_timeout %>
   pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= @name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
   if [ ! -z "$pslist" ]; then
     kill $pslist
