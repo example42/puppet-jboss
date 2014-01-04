@@ -74,6 +74,11 @@
 #   Use this variable to define a different Puppet template source.
 #   Default is: "jboss/jboss.init.erb" (Use it as reference for customization).
 #
+# [*init_timeout*]
+#   How long the init script will wait in seconds before forcibly (`kill -9`)
+#   stopping the JBoss instance.
+#   Default is: 0
+#
 # [*enable*]
 #   If the instance is actually created and enabled. Default: true
 #   If you set this to false since the beginning nothing is done.
@@ -86,18 +91,19 @@
 #
 # More elaborated examples:
 #    jboss::instance { "myapp":
-#        user      => "myapp",   # Default is jboss
-#        userid    => "450",     # Default is unset
-#        group     => "myapp",   # Default is jboss
-#        groupid   => "450",     # Default is unset
-#        createuser => true      # Default is true
-#        template  => "all",     # Default is default
-#        bindaddr  => "0.0.0.0", # Default is 127.0.0.1
-#        port      => "80",      # Default is 8080
-#        run_conf  => "site/jboss/myapp/run.conf", # Default is unset
-#        conf_dir       => "site/jboss/myapp/conf",      # Default is unset
-#        deploy_dir     => "site/jboss/myapp/deploy",    # Default is unset
-#        deployers_dir  => "site/jboss/myapp/deployers", # Default is unset
+#        user          => "myapp",   # Default is jboss
+#        userid        => "450",     # Default is unset
+#        group         => "myapp",   # Default is jboss
+#        groupid       => "450",     # Default is unset
+#        createuser    => true       # Default is true
+#        template      => "all",     # Default is default
+#        bindaddr      => "0.0.0.0", # Default is 127.0.0.1
+#        port          => "80",      # Default is 8080
+#        init_timeout  => 10,        # Default is 0
+#        run_conf      => "site/jboss/myapp/run.conf",  # Default is unset
+#        conf_dir      => "site/jboss/myapp/conf",      # Default is unset
+#        deploy_dir    => "site/jboss/myapp/deploy",    # Default is unset
+#        deployers_dir => "site/jboss/myapp/deployers", # Default is unset
 #    }
 #
 define jboss::instance (
@@ -114,6 +120,7 @@ define jboss::instance (
   $deploy_dir    = '',
   $deployers_dir = '',
   $init_template = '',
+  $init_timeout  = 0,
   $enable        = true,
   $monitor       = $jboss::bool_monitor,
   ) {
@@ -127,6 +134,8 @@ define jboss::instance (
     true  => 'running',
     false => undef,
   }
+  # stdlib does not [yet] have a validate_{numeric|int}
+  validate_string($init_timeout)
 
   $real_template = $template ? {
     ''      => $jboss::version ? {
