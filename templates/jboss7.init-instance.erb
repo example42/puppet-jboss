@@ -1,43 +1,43 @@
 #!/bin/sh
 # File Managed by Puppet
-<% if operatingsystem == 'RedHat' or operatingsystem == 'CentOS' or operatingsystem == 'Scientific' %>
-# jboss-<%= name %>        Startup script for JBoss Instance <%= name %>
+<% if @operatingsystem == 'RedHat' or @operatingsystem == 'CentOS' or @operatingsystem == 'Scientific' %>
+# jboss-<%= @name %>        Startup script for JBoss Instance <%= @name %>
 #
 # chkconfig: - 85 15
 # description: Jboss is an Application Server
-<% elsif operatingsystem == 'Debian' or operatingsystem == 'Ubuntu' or operatingsystem == 'Mint' %>
+<% elsif @operatingsystem == 'Debian' or @operatingsystem == 'Ubuntu' or @operatingsystem == 'Mint' %>
 <% end %>
 ### BEGIN INIT INFO
-# Provides:          jboss-<%= name %>
+# Provides:          jboss-<%= @name %>
 # Required-Start:    $local_fs $remote_fs $network 
 # Required-Stop:     $local_fs $remote_fs $network 
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start/stop jboss-<%= name %> service
+# Short-Description: Start/stop jboss-<%= @name %> service
 ### END INIT INFO
 
 # define where jboss is - this is the directory containing directories log, bin, conf etc
 JBOSS_HOME=${JBOSS_HOME:-"<%= scope.lookupvar('jboss::real_jboss_dir') %>"}
 
 # define the user under which jboss will run, or use 'RUNASIS' to run as the current user
-JBOSS_USER=${JBOSS_USER:-"<%= user %>"}
+JBOSS_USER=${JBOSS_USER:-"<%= @user %>"}
 
 # make sure java is in your path
 JAVAPTH=${JAVAPTH:-"/usr/local/jdk/bin"}
 
 # configuration to use
-JBOSS_CONF=${JBOSS_CONF:-"<%= name %>"}
+JBOSS_CONF=${JBOSS_CONF:-"<%= @name %>"}
 
 # if JBOSS_HOST specified, use -b to bind jboss services to that address
-#JBOSS_BIND_ADDR=${JBOSS_HOST:+"-b <%= bindaddr %>"}
-JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= bindaddr %>"}
+#JBOSS_BIND_ADDR=${JBOSS_HOST:+"-b <%= @bindaddr %>"}
+JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= @bindaddr %>"}
 
 # define the script to use to start jboss
 JBOSSSH=${JBOSSSH:-"$JBOSS_HOME/bin/<%= scope.lookupvar('jboss::real_mode') %>.sh -c $JBOSS_CONF $JBOSS_BIND_ADDR"}
 
 # Lock and Pid files
-LOCKFILE=/var/lock/jboss-<%= name %>
-PIDFILE=/var/run/jboss-<%= name %>.pid
+LOCKFILE=/var/lock/jboss-<%= @name %>
+PIDFILE=/var/run/jboss-<%= @name %>.pid
 
 if [ "$JBOSS_USER" = "RUNASIS" ]; then
   SUBIT=""
@@ -65,7 +65,7 @@ JBOSS_CONSOLE=${JBOSS_CONSOLE:-"/dev/null"}
 # Jboss Start command
 <% if scope.lookupvar('run_conf') != "" -%>
 # Custom, per instance, run.conf configured via Puppet
-JBOSS_CMD_START="cd $JBOSS_HOME/bin; export RUN_CONF=<%= scope.lookupvar('jboss::jboss_dir') %>/<%= name %>/run.conf ; $JBOSSSH"
+JBOSS_CMD_START="cd $JBOSS_HOME/bin; export RUN_CONF=<%= scope.lookupvar('jboss::jboss_dir') %>/<%= @name %>/run.conf ; $JBOSSSH"
 <% else -%>
 JBOSS_CMD_START="cd $JBOSS_HOME/bin; $JBOSSSH"
 <% end -%>
@@ -82,7 +82,7 @@ fi
 
 
 status () {
-  pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+  pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= @name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
   if [ -n "$pslist" ]; then
     echo "jboss (pid $pslist) is running result: 0"
     return 0
@@ -121,7 +121,7 @@ start () {
 
 stop () {
   [ "$1" -eq "$1" ] 2> /dev/null && timeout=$1 || timeout=0
-  pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+  pslist=$( ps -ef | fgrep run.sh | fgrep java | fgrep $JBOSS_USER | fgrep <%= @name %> | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
   if [ ! -z "$pslist" ]; then
     kill $pslist
     seconds=0

@@ -5,8 +5,8 @@ upstream php {
 }
  
 server {
-        server_name <%= name %>
-        root <%= docroot %>
+        server_name <%= @name %>
+        root <%= @docroot %>
 
         index index.php;
  
