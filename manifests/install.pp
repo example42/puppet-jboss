@@ -34,7 +34,8 @@ class jboss::install inherits jboss {
         preextract_command  => $jboss::install_precommand,
         postextract_command => $jboss::real_install_postcommand,
         extracted_dir       => $jboss::real_created_dirname,
-        owner               => 'root',
+        owner               => $jboss::process_user,
+        group               => $jboss::process_user,
         require             => User[$jboss::process_user],
       }
 
