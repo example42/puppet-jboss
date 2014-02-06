@@ -45,6 +45,9 @@
 #   Note (obvious): Do not place multiple instances with the same port on the same IP
 #   Consider that Jboss opens by default other ports besides this one
 #
+# [*bindaddr_admin_console*]
+#   The address where to bind the admin console of the Jboss instance. Default: 127.0.0.1
+#
 # [*run_conf*]
 #   Source ( as in puppet:///modules/${run_conf} ) from where to get a custom run.conf dedicated
 #   to this instance. Default is unset, and Jboss default run.conf is used
@@ -107,22 +110,23 @@
 #    }
 #
 define jboss::instance (
-  $user          = 'jboss',
-  $userid        = '',
-  $group         = 'jboss',
-  $groupid       = '',
-  $createuser    = true,
-  $template      = '',
-  $bindaddr      = '127.0.0.1',
-  $port          = '8080',
-  $run_conf      = '',
-  $conf_dir      = '',
-  $deploy_dir    = '',
-  $deployers_dir = '',
-  $init_template = '',
-  $init_timeout  = 0,
-  $enable        = true,
-  $monitor       = $jboss::bool_monitor,
+  $user                   = 'jboss',
+  $userid                 = '',
+  $group                  = 'jboss',
+  $groupid                = '',
+  $createuser             = true,
+  $template               = '',
+  $bindaddr               = '127.0.0.1',
+  $port                   = '8080',
+  $bindaddr_admin_console = '127.0.0.1',
+  $run_conf               = '',
+  $conf_dir               = '',
+  $deploy_dir             = '',
+  $deployers_dir          = '',
+  $init_template          = '',
+  $init_timeout           = 0,
+  $enable                 = true,
+  $monitor                = $jboss::bool_monitor,
   ) {
 
   require jboss

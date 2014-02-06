@@ -31,9 +31,10 @@ JBOSS_CONF=${JBOSS_CONF:-"<%= @name %>"}
 # if JBOSS_HOST specified, use -b to bind jboss services to that address
 #JBOSS_BIND_ADDR=${JBOSS_HOST:+"-b <%= @bindaddr %>"}
 JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= @bindaddr %>"}
+JBOSS_BIND_ADDR_ADMIN_CONSOLE=${JBOSS_HOST:-"-bmanagement <%= @bindaddr_admin_console %>"}
 
 # define the script to use to start jboss
-JBOSSSH=${JBOSSSH:-"$JBOSS_HOME/bin/<%= scope.lookupvar('jboss::real_mode') %>.sh -Djboss.server.base.dir=$JBOSS_CONF $JBOSS_BIND_ADDR"}
+JBOSSSH=${JBOSSSH:-"$JBOSS_HOME/bin/<%= scope.lookupvar('jboss::real_mode') %>.sh -Djboss.server.base.dir=$JBOSS_CONF $JBOSS_BIND_ADDR $JBOSS_BIND_ADDR_ADMIN_CONSOLE"}
 
 # Lock and Pid files
 LOCKFILE=/var/lock/jboss-<%= @name %>
