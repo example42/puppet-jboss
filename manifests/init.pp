@@ -74,6 +74,9 @@
 # [*bindaddr*]
 #   Bind address of Jboss . Default 127.0.0.1
 #
+# [*bindaddr_admin_console*]
+#   The address where to bind the admin console of the Jboss instance. Default: 127.0.0.1
+#
 # [*mode*]
 #   Jboss Mode.
 #   - On Jboss 7 refers to operating mode:
@@ -289,6 +292,7 @@ class jboss (
   $init_script_template = params_lookup( 'init_script_template' ),
   $conf_script_template = params_lookup( 'conf_script_template' ),
   $bindaddr            = params_lookup( 'bindaddr' ),
+  $bindaddr_admin_console = params_lookup('bindaddr_admin_console'),
   $mode                = params_lookup( 'mode' ),
   $my_class            = params_lookup( 'my_class' ),
   $source              = params_lookup( 'source' ),
