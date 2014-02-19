@@ -245,11 +245,16 @@ define jboss::instance (
     }
   }
 
+  $instance_configuration_directory = $jboss::version ?{
+    '7' => 'configuration',
+    default =>'conf'
+  }
+
   # Manage conf dir, if defined
   if ($conf_dir != "") and ($enable == true) {
     file { "jboss_confdir_${name}":
       ensure  => directory,
-      path    => "${instance_dir}/conf/",
+      path    => "${instance_dir}/${instance_configuration_directory}/",
       owner   => $user,
       group   => $group,
       require => Exec["Set_Jboss_Instance_Permissions_$name"],
