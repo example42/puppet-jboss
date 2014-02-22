@@ -46,7 +46,7 @@
 #   Consider that Jboss opens by default other ports besides this one
 #
 # [*bindaddr_admin_console*]
-#   The address where to bind the admin console of the Jboss instance. Default: 127.0.0.1
+#   The address where to bind the admin console of the Jboss instance. Default: ''
 #
 # [*run_conf*]
 #   Source ( as in puppet:///modules/${run_conf} ) from where to get a custom run.conf dedicated
@@ -118,7 +118,7 @@ define jboss::instance (
   $template               = '',
   $bindaddr               = '127.0.0.1',
   $port                   = '8080',
-  $bindaddr_admin_console = '127.0.0.1',
+  $bindaddr_admin_console = '',
   $run_conf               = '',
   $conf_dir               = '',
   $deploy_dir             = '',
