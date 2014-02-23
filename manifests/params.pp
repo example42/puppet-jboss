@@ -27,6 +27,7 @@ class jboss::params {
   $init_script_template = ''
   $conf_script_template = ''
   $bindaddr = '127.0.0.1'
+  $bindaddr_admin_console = ''
   $mode = ''
 
   ### Application related parameters

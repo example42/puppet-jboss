@@ -45,6 +45,9 @@
 #   Note (obvious): Do not place multiple instances with the same port on the same IP
 #   Consider that Jboss opens by default other ports besides this one
 #
+# [*bindaddr_admin_console*]
+#   The address where to bind the admin console of the Jboss instance. Default: ''
+#
 # [*run_conf*]
 #   Source ( as in puppet:///modules/${run_conf} ) from where to get a custom run.conf dedicated
 #   to this instance. Default is unset, and Jboss default run.conf is used
@@ -91,38 +94,40 @@
 #
 # More elaborated examples:
 #    jboss::instance { "myapp":
-#        user          => "myapp",   # Default is jboss
-#        userid        => "450",     # Default is unset
-#        group         => "myapp",   # Default is jboss
-#        groupid       => "450",     # Default is unset
-#        createuser    => true       # Default is true
-#        template      => "all",     # Default is default
-#        bindaddr      => "0.0.0.0", # Default is 127.0.0.1
-#        port          => "80",      # Default is 8080
-#        init_timeout  => 10,        # Default is 0
-#        run_conf      => "site/jboss/myapp/run.conf",  # Default is unset
-#        conf_dir      => "site/jboss/myapp/conf",      # Default is unset
-#        deploy_dir    => "site/jboss/myapp/deploy",    # Default is unset
-#        deployers_dir => "site/jboss/myapp/deployers", # Default is unset
+#        user                   => "myapp",   # Default is jboss
+#        userid                 => "450",     # Default is unset
+#        group                  => "myapp",   # Default is jboss
+#        groupid                => "450",     # Default is unset
+#        createuser             => true       # Default is true
+#        template               => "all",     # Default is default
+#        bindaddr               => "0.0.0.0", # Default is 127.0.0.1
+#        port                   => "80",      # Default is 8080
+#        bindaddr_admin_console => "0.0.0.0"  # Default is ''
+#        init_timeout           => 10,        # Default is 0
+#        run_conf               => "site/jboss/myapp/run.conf",  # Default is unset
+#        conf_dir               => "site/jboss/myapp/conf",      # Default is unset
+#        deploy_dir             => "site/jboss/myapp/deploy",    # Default is unset
+#        deployers_dir          => "site/jboss/myapp/deployers", # Default is unset
 #    }
 #
 define jboss::instance (
-  $user          = 'jboss',
-  $userid        = '',
-  $group         = 'jboss',
-  $groupid       = '',
-  $createuser    = true,
-  $template      = '',
-  $bindaddr      = '127.0.0.1',
-  $port          = '8080',
-  $run_conf      = '',
-  $conf_dir      = '',
-  $deploy_dir    = '',
-  $deployers_dir = '',
-  $init_template = '',
-  $init_timeout  = 0,
-  $enable        = true,
-  $monitor       = $jboss::bool_monitor,
+  $user                   = 'jboss',
+  $userid                 = '',
+  $group                  = 'jboss',
+  $groupid                = '',
+  $createuser             = true,
+  $template               = '',
+  $bindaddr               = '127.0.0.1',
+  $port                   = '8080',
+  $bindaddr_admin_console = '',
+  $run_conf               = '',
+  $conf_dir               = '',
+  $deploy_dir             = '',
+  $deployers_dir          = '',
+  $init_template          = '',
+  $init_timeout           = 0,
+  $enable                 = true,
+  $monitor                = $jboss::bool_monitor,
   ) {
 
   require jboss
