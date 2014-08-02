@@ -190,7 +190,7 @@ define jboss::instance (
     enable     => $bool_enable,
     hasrestart => true,
     hasstatus  => true,
-    require    => Class['jboss::install'],
+    require    => Exec["Clone_Jboss_Instance_$name"],
   }
 
   if ($bool_enable == true) {
