@@ -28,6 +28,7 @@ class jboss::params {
   $conf_script_template = ''
   $bindaddr = '127.0.0.1'
   $mode = ''
+  $service_autorestart = true
 
   ### Application related parameters
 
