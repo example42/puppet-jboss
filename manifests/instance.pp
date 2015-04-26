@@ -161,85 +161,85 @@ define jboss::instance (
 
   if ($bool_enable == true) {
     # Create custom Instance files
-    exec { "Clone_Jboss_Instance_$name":
-      command  => "cp -a ${real_template} ${name}",
-      cwd      => $jboss::real_instance_basedir,
-      path     => '/sbin:/bin:/usr/sbin:/usr/bin',
-      creates  => $instance_dir,
-      timeout  => 3600,
-      require  => Class['jboss::install'],
+    exec { "Clone_Jboss_Instance_${name}":
+      command => "cp -a ${real_template} ${name}",
+      cwd     => $jboss::real_instance_basedir,
+      path    => '/sbin:/bin:/usr/sbin:/usr/bin',
+      creates => $instance_dir,
+      timeout => 3600,
+      require => Class['jboss::install'],
     }
 
     $exec_perms_require = $bool_createuser ? {
-      true  => [ Exec["Clone_Jboss_Instance_$name"] , User["${user}"] , Group["$group"] ],
-      false => Exec["Clone_Jboss_Instance_$name"],
+      true  => [ Exec["Clone_Jboss_Instance_${name}"] , User[$user] , Group[$group] ],
+      false => Exec["Clone_Jboss_Instance_${name}"],
     }
-    exec { "Set_Jboss_Instance_Permissions_$name":
-      command  => "chown -R ${user}:${group} ${instance_dir} && touch ${instance_dir}/.permissions_set",
-      cwd      => $jboss::real_instance_basedir,
-      path     => '/sbin:/bin:/usr/sbin:/usr/bin',
-      creates  => "${instance_dir}/.permissions_set",
-      timeout  => 3600,
-      require  => $exec_perms_require,
+    exec { "Set_Jboss_Instance_Permissions_${name}":
+      command => "chown -R ${user}:${group} ${instance_dir} && touch ${instance_dir}/.permissions_set",
+      cwd     => $jboss::real_instance_basedir,
+      path    => '/sbin:/bin:/usr/sbin:/usr/bin',
+      creates => "${instance_dir}/.permissions_set",
+      timeout => 3600,
+      require => $exec_perms_require,
     }
   }
 
   # Manage Instance service
-  service { "jboss-$name":
+  service { "jboss-${name}":
     ensure     => $service_ensure,
     enable     => $bool_enable,
     hasrestart => true,
     hasstatus  => true,
-    require    => Exec["Clone_Jboss_Instance_$name"],
+    require    => Exec["Clone_Jboss_Instance_${name}"],
   }
 
   if ($bool_enable == true) {
-    file { "Jboss_initscript_$name":
-      path    => "/etc/init.d/jboss-$name",
+    file { "Jboss_initscript_${name}":
+      path    => "/etc/init.d/jboss-${name}",
       mode    => '0755',
       owner   => 'root',
       group   => 'root',
-      before  => Service["jboss-$name"],
-      notify  => Service["jboss-$name"],
-      content => template("$real_init_template"),
+      before  => Service["jboss-${name}"],
+      notify  => Service["jboss-${name}"],
+      content => template($real_init_template),
     }
   }
 
   # Manage Instance user
   if ($enable == true) and ($createuser == true) {
-    @user { "$user":
+    @user { $user:
+      ensure     => present,
       uid        => $userid ? {
         ''      => undef,
         default => $userid,
       },
-      ensure     => present,
       password   => '!',
       managehome => false,
       comment    => 'JBoss user',
       shell      => '/bin/bash',
       home       => $jboss::real_jboss_dir,
     }
-    @group { "$group":
-      gid        => $groupid ? {
+    @group { $group:
+      ensure  => present,
+      gid     => $groupid ? {
         ''      => undef,
         default => $groupid,
       },
-      ensure     => present,
-      require    => User["$user"],
+      require => User[$user],
     }
 
-    realize User["$user"]
-    realize Group["$group"]
+    realize User[$user]
+    realize Group[$group]
   }
 
   # Manage custom run.conf , if defined
-  if ($run_conf != "") and ($enable == true) {
+  if ($run_conf != '') and ($enable == true) {
     file { "jboss_run_conf_${name}":
       ensure  => $ensure,
       path    => "${instance_dir}/run.conf",
       owner   => $user,
       group   => $group,
-      require => Exec["Set_Jboss_Instance_Permissions_$name"],
+      require => Exec["Set_Jboss_Instance_Permissions_${name}"],
       notify  => Service["jboss-${name}"],
       source  => "puppet:///modules/${run_conf}",
     }
@@ -251,13 +251,13 @@ define jboss::instance (
   }
 
   # Manage conf dir, if defined
-  if ($conf_dir != "") and ($enable == true) {
+  if ($conf_dir != '') and ($enable == true) {
     file { "jboss_confdir_${name}":
       ensure  => directory,
       path    => "${instance_dir}/${instance_configuration_directory}/",
       owner   => $user,
       group   => $group,
-      require => Exec["Set_Jboss_Instance_Permissions_$name"],
+      require => Exec["Set_Jboss_Instance_Permissions_${name}"],
       notify  => Service["jboss-${name}"],
       recurse => true,
       ignore  => '.svn',
@@ -266,13 +266,13 @@ define jboss::instance (
   }
 
   # Manage deploy dir, if defined
-  if ($deploy_dir != "") and ($enable == true) {
+  if ($deploy_dir != '') and ($enable == true) {
     file { "jboss_deploydir_${name}":
       ensure  => directory,
       path    => "${instance_dir}/deploy/",
       owner   => $user,
       group   => $group,
-      require => Exec["Set_Jboss_Instance_Permissions_$name"],
+      require => Exec["Set_Jboss_Instance_Permissions_${name}"],
       notify  => Service["jboss-${name}"],
       recurse => true,
       ignore  => '.svn',
@@ -281,13 +281,13 @@ define jboss::instance (
   }
 
   # Manage deployers dir, if defined
-  if ($deployers_dir != "") and ($enable == true) {
+  if ($deployers_dir != '') and ($enable == true) {
     file { "jboss_deployersdir_${name}":
       ensure  => directory,
       path    => "${instance_dir}/deployers/",
       owner   => $user,
       group   => $group,
-      require => Exec["Set_Jboss_Instance_Permissions_$name"],
+      require => Exec["Set_Jboss_Instance_Permissions_${name}"],
       notify  => Service["jboss-${name}"],
       recurse => true,
       ignore  => '.svn',

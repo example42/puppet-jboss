@@ -17,23 +17,23 @@ class jboss::service inherits jboss {
 
     package: {
       service { 'jboss':
-        ensure     => $jboss::manage_service_ensure,
-        name       => $jboss::service,
-        enable     => $jboss::manage_service_enable,
-        hasstatus  => $jboss::service_status,
-        pattern    => $jboss::process,
-        require    => Package['jboss'],
+        ensure    => $jboss::manage_service_ensure,
+        name      => $jboss::service,
+        enable    => $jboss::manage_service_enable,
+        hasstatus => $jboss::service_status,
+        pattern   => $jboss::process,
+        require   => Package['jboss'],
       }
     }
 
     source,puppi: {
       service { 'jboss':
-        ensure     => $jboss::manage_service_ensure,
-        name       => $jboss::service,
-        enable     => $jboss::manage_service_enable,
-        hasstatus  => $jboss::service_status,
-        pattern    => $jboss::process,
-        require    => File['jboss.init'],
+        ensure    => $jboss::manage_service_ensure,
+        name      => $jboss::service,
+        enable    => $jboss::manage_service_enable,
+        hasstatus => $jboss::service_status,
+        pattern   => $jboss::process,
+        require   => File['jboss.init'],
       }
       file { 'jboss.init':
         ensure  => $jboss::manage_file,
@@ -43,7 +43,7 @@ class jboss::service inherits jboss {
         group   => $jboss::config_file_group,
         require => Class['jboss::install'],
         notify  => $jboss::manage_service_autorestart,
-        content => template("$jboss::real_init_script_template"),
+        content => template($jboss::real_init_script_template),
         audit   => $jboss::manage_audit,
       }
     }

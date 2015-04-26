@@ -456,7 +456,7 @@ class jboss (
     default => $jboss::install_destination,
   }
 
-  $real_jboss_dir = "$real_install_destination/$install_dirname"
+  $real_jboss_dir = "${real_install_destination}/${install_dirname}"
 
   $real_install_postcommand = $jboss::install_postcommand ? {
     ''      => "chown -R ${jboss::process_user} ${jboss::real_install_destination}/${jboss::real_created_dirname}",
@@ -494,7 +494,7 @@ class jboss (
     '4' => "${jboss::real_jboss_dir}/server",
     '5' => "${jboss::real_jboss_dir}/server",
     '6' => "${jboss::real_jboss_dir}/server",
-    '7' => "${jboss::real_jboss_dir}",
+    '7' => $jboss::real_jboss_dir,
   }
 
   $real_config_dir = $jboss::config_dir ? {

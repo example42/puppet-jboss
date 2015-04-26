@@ -22,8 +22,8 @@ class jboss::user inherits jboss {
 
   if $jboss::user_gid {
     @group { $jboss::process_user :
-      ensure     => $jboss::manage_file,
-      gid        => $jboss::user_gid,
+      ensure => $jboss::manage_file,
+      gid    => $jboss::user_gid,
     }
     Group <| title == $jboss::process_user |>
   }

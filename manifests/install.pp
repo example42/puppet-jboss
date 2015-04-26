@@ -42,7 +42,7 @@ class jboss::install inherits jboss {
       file { 'jboss_link':
         ensure => "${jboss::real_install_destination}/${jboss::real_created_dirname}" ,
         path   => "${jboss::real_install_destination}/${jboss::install_dirname}" ,
-      } 
+      }
     }
 
     puppi: {
@@ -55,7 +55,7 @@ class jboss::install inherits jboss {
         source                   => $jboss::real_install_source,
         deploy_root              => $jboss::real_install_destination,
         predeploy_customcommand  => $jboss::install_precommand,
-        postdeploy_customcommand => $real_install_postcommand,
+        postdeploy_customcommand => $jboss::real_install_postcommand,
         user                     => 'root',
         report_email             => 'root',
         auto_deploy              => true,
@@ -67,7 +67,7 @@ class jboss::install inherits jboss {
       file { 'jboss_link':
         ensure => "${jboss::real_install_destination}/${jboss::real_created_dirname}" ,
         path   => "${jboss::real_install_destination}/${jboss::install_dirname}" ,
-      } 
+      }
     }
 
     default: { }
