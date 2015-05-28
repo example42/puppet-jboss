@@ -38,12 +38,17 @@ JAVAPTH=${JAVAPTH:-"/usr/local/jdk/bin"}
 
 # if JBOSS_HOST specified, use -b to bind jboss services to that address
 JBOSS_BIND_ADDR=${JBOSS_HOST:-"-b <%= scope.lookupvar('jboss::bindaddr') %>"}
+<% if @bindaddr_admin_console != "" -%>
+JBOSS_BIND_ADDR_ADMIN_CONSOLE=${JBOSS_HOST:-"-bmanagement <%= scope.lookupvar('jboss::bindaddr_admin_console') %>"}
+<% else -%>
+JBOSS_BIND_ADDR_ADMIN_CONSOLE=""
+<% end -%>
 
 # configuration to use
 JBOSS_CONFIG=${JBOSS_CONFIG:-"<%= scope.lookupvar('jboss::real_mode') %>.xml"}
 
 # define the script to use to start jboss
-JBOSS_SCRIPT="$JBOSS_HOME/bin/<%= scope.lookupvar('jboss::real_mode') %>.sh $JBOSS_BIND_ADDR"
+JBOSS_SCRIPT="$JBOSS_HOME/bin/<%= scope.lookupvar('jboss::real_mode') %>.sh $JBOSS_BIND_ADDR $JBOSS_BIND_ADDR_ADMIN_CONSOLE"
 
 # Pid file
 JBOSS_PIDFILE=<%= scope.lookupvar('jboss::pid_file') %>
