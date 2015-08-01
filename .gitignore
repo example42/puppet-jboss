@@ -8,3 +8,6 @@ spec/fixtures
 .*.sw[a-z]
 *.un~
 Gemfile.lock
+.bundle
+vendor
+
