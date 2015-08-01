@@ -122,7 +122,7 @@ define jboss::instance (
   $init_template = '',
   $init_timeout  = 0,
   $enable        = true,
-  $monitor       = $jboss::bool_monitor,
+  $monitor       = $jboss::bool_monitor
   ) {
 
   require jboss
