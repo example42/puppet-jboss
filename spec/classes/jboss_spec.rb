@@ -7,6 +7,7 @@ describe 'jboss' do
   let(:facts) { {
       :ipaddress => '10.42.42.42',
       :operatingsystem => 'RedHat',
+      :operatingsystemrelease => '6.6',
       :concat_basedir => '/dne'
   } }
 
