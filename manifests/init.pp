@@ -568,7 +568,7 @@ class jboss (
     }
   }
 
-  if $jboss::conf_script_template {
+  if ! $jboss::conf_script_template == '' {
     file { 'jboss.script.conf':
       ensure  => $jboss::manage_file,
       path    => $jboss::real_conf_script_path,

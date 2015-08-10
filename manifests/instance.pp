@@ -134,25 +134,27 @@ define jboss::instance (
     true  => 'running',
     false => undef,
   }
-  # stdlib does not [yet] have a validate_{numeric|int}
-  validate_string($init_timeout)
+
+  if ! is_integer($init_timeout) {
+    fail('Variable init_timeout is not an integer')
+  }
 
   $real_template = $template ? {
     ''      => $jboss::version ? {
-      4 => 'default',
-      5 => 'default',
-      6 => 'default',
-      7 => 'standalone',
+      '4' => 'default',
+      '5' => 'default',
+      '6' => 'default',
+      '7' => 'standalone',
     },
     default => $template,
   }
 
   $real_init_template = $init_template ? {
     ''      => $jboss::version ? {
-      4 => 'jboss/jboss6.init-instance.erb',
-      5 => 'jboss/jboss6.init-instance.erb',
-      6 => 'jboss/jboss6.init-instance.erb',
-      7 => 'jboss/jboss7.init-instance.erb',
+      '4' => 'jboss/jboss6.init-instance.erb',
+      '5' => 'jboss/jboss6.init-instance.erb',
+      '6' => 'jboss/jboss6.init-instance.erb',
+      '7' => 'jboss/jboss7.init-instance.erb',
     },
     default => $init_template,
   }
@@ -207,24 +209,26 @@ define jboss::instance (
 
   # Manage Instance user
   if ($enable == true) and ($createuser == true) {
+    $uid = $userid ? {
+      ''      => undef,
+      default => $userid,
+    }
     @user { $user:
       ensure     => present,
-      uid        => $userid ? {
-        ''      => undef,
-        default => $userid,
-      },
+      uid        => $uid,
       password   => '!',
       managehome => false,
       comment    => 'JBoss user',
       shell      => '/bin/bash',
       home       => $jboss::real_jboss_dir,
     }
+    $gid = $groupid ? {
+      ''      => undef,
+      default => $groupid,
+    }
     @group { $group:
       ensure  => present,
-      gid     => $groupid ? {
-        ''      => undef,
-        default => $groupid,
-      },
+      gid     => $gid,
       require => User[$user],
     }
 
