@@ -20,7 +20,7 @@ For detailed info about the logic and usage patterns of Example42 modules read R
 
         class { 'jboss': }
 
-* Install the latest jboss version from upstream site
+* Install the latest jboss version from upstream site (note: this option, which is the default one, requires the presence of the unzip command on the system)
 
         class { 'jboss':
           install             => 'source',
