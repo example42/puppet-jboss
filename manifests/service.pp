@@ -22,7 +22,7 @@ class jboss::service inherits jboss {
         enable    => $jboss::manage_service_enable,
         hasstatus => $jboss::service_status,
         pattern   => $jboss::process,
-        require   => Package['jboss'],
+        require   => $jboss::package,
       }
     }
 
