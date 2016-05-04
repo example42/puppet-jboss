@@ -345,264 +345,217 @@ class jboss (
 
 
   ### Definition of some variables used in the module
-  $manage_package = $jboss::bool_absent ? {
+  $manage_package = $bool_absent ? {
     true  => 'absent',
     false => 'present',
   }
 
-  $manage_service_enable = $jboss::bool_disableboot ? {
+  $manage_service_enable = $bool_disableboot ? {
     true    => false,
-    default => $jboss::bool_disable ? {
+    default => $bool_disable ? {
       true    => false,
-      default => $jboss::bool_absent ? {
+      default => $bool_absent ? {
         true  => false,
         false => true,
       },
     },
   }
 
-  $manage_service_ensure = $jboss::bool_disable ? {
+  $manage_service_ensure = $bool_disable ? {
     true    => 'stopped',
-    default =>  $jboss::bool_absent ? {
+    default =>  $bool_absent ? {
       true    => 'stopped',
       default => 'running',
     },
   }
 
-  $manage_service_autorestart = $jboss::bool_service_autorestart ? {
-    true    => $disable ? {
-      ''      => undef,
-      default => Service[jboss],
-    },
-    false   => undef,
-  }
-
-  $manage_file = $jboss::bool_absent ? {
+  $manage_file = $bool_absent ? {
     true    => 'absent',
     default => 'present',
   }
 
-  if $jboss::bool_absent == true
-  or $jboss::bool_disable == true
-  or $jboss::bool_disableboot == true {
+  if $bool_absent == true
+  or $bool_disable == true
+  or $bool_disableboot == true {
     $manage_monitor = false
   } else {
     $manage_monitor = true
   }
 
-  if $jboss::bool_absent == true
-  or $jboss::bool_disable == true {
+  if $bool_absent == true
+  or $bool_disable == true {
     $manage_firewall = false
   } else {
     $manage_firewall = true
   }
 
-  $manage_audit = $jboss::bool_audit_only ? {
+  $manage_audit = $bool_audit_only ? {
     true  => 'all',
     false => undef,
   }
 
-  $manage_file_replace = $jboss::bool_audit_only ? {
+  $manage_file_replace = $bool_audit_only ? {
     true  => false,
     false => true,
   }
 
-  $manage_file_source = $jboss::source ? {
+  $manage_file_source = $source ? {
     ''        => undef,
-    default   => $jboss::source,
+    default   => $source,
   }
 
-  $manage_file_content = $jboss::template ? {
+  $manage_file_content = $template ? {
     ''        => undef,
-    default   => template($jboss::template),
+    default   => template($template),
   }
 
   ### Calculations of variables whose value depends on different params
   # If this seems complex... you are right, but managing automatically different
   # versions and cases IS complex...
 
-  $real_install_source = $jboss::install_source ? {
-    ''      => $jboss::version ? {
+  $real_install_source = $install_source ? {
+    ''      => $version ? {
       '4' => 'http://sourceforge.net/projects/jboss/files/JBoss/JBoss-4.2.3.GA/jboss-4.2.3.GA.zip',
       '5' => 'http://sourceforge.net/projects/jboss/files/JBoss/JBoss-5.1.0.GA/jboss-5.1.0.GA.zip',
       '6' => 'http://download.jboss.org/jbossas/6.1/jboss-as-distribution-6.1.0.Final.zip',
       '7' => 'http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/jboss-as-7.1.1.Final.zip',
     },
-    default => $jboss::install_source,
+    default => $install_source,
   }
 
-  $real_created_dirname = $jboss::created_dirname ? {
-    ''      => $jboss::version ? {
+  $real_created_dirname = $created_dirname ? {
+    ''      => $version ? {
       '4' => 'jboss-4.2.3.GA',
       '5' => 'jboss-5.1.0.GA',
       '6' => 'jboss-6.1.0.Final',
       '7' => 'jboss-as-7.1.1.Final',
     },
-    default => $jboss::created_dirname,
+    default => $created_dirname,
   }
 
-  $real_init_script_template = $jboss::init_script_template ? {
-    ''      => $jboss::version ? {
+  $real_init_script_template = $init_script_template ? {
+    ''      => $version ? {
       '4' => 'jboss/jboss6.init.erb',
       '5' => 'jboss/jboss6.init.erb',
       '6' => 'jboss/jboss6.init.erb',
       '7' => 'jboss/jboss7.init.erb',
     },
-    default => $jboss::init_script_template,
+    default => $init_script_template,
   }
 
-  $real_install_destination = $jboss::install_destination ? {
+  $real_install_destination = $install_destination ? {
     ''      => '/opt',
-    default => $jboss::install_destination,
+    default => $install_destination,
   }
 
   $real_jboss_dir = "${real_install_destination}/${install_dirname}"
 
-  $real_install_postcommand = $jboss::install_postcommand ? {
-    ''      => "chown -R ${jboss::process_user} ${jboss::real_install_destination}/${jboss::real_created_dirname}",
-    default => $jboss::install_postcommand,
+  $real_install_postcommand = $install_postcommand ? {
+    ''      => "chown -R ${process_user} ${real_install_destination}/${real_created_dirname}",
+    default => $install_postcommand,
   }
 
   $real_mode = $mode ? {
-    ''      => $jboss::version ? {
+    ''      => $version ? {
       '4' => 'default',
       '5' => 'default',
       '6' => 'default',
       '7' => 'standalone',
     },
-    default => $jboss::mode,
+    default => $mode,
   }
 
-  $real_config_file = $jboss::config_file ? {
-    ''      => $jboss::version ? {
-      '4' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf/jboss-service.xml",
-      '5' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf/jboss-service.xml",
-      '6' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf/jboss-service.xml",
-      '7' => "${jboss::real_jboss_dir}/${jboss::real_mode}/configuration/${jboss::real_mode}.xml",
+  $real_config_file = $config_file ? {
+    ''      => $version ? {
+      '4' => "${real_jboss_dir}/server/${real_mode}/conf/jboss-service.xml",
+      '5' => "${real_jboss_dir}/server/${real_mode}/conf/jboss-service.xml",
+      '6' => "${real_jboss_dir}/server/${real_mode}/conf/jboss-service.xml",
+      '7' => "${real_jboss_dir}/${real_mode}/configuration/${real_mode}.xml",
     },
-    default => $jboss::config_file,
+    default => $config_file,
   }
 
-  $real_conf_script_path = $jboss::version ? {
-    '4' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/bin/run.conf",
-    '5' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/bin/run.conf",
-    '6' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/bin/run.conf",
-    '7' => "${jboss::real_jboss_dir}/bin/${jboss::real_mode}.conf",
+  $real_conf_script_path = $version ? {
+    '4' => "${real_jboss_dir}/server/${real_mode}/bin/run.conf",
+    '5' => "${real_jboss_dir}/server/${real_mode}/bin/run.conf",
+    '6' => "${real_jboss_dir}/server/${real_mode}/bin/run.conf",
+    '7' => "${real_jboss_dir}/bin/${real_mode}.conf",
   }
 
-  $real_instance_basedir = $jboss::version ? {
-    '4' => "${jboss::real_jboss_dir}/server",
-    '5' => "${jboss::real_jboss_dir}/server",
-    '6' => "${jboss::real_jboss_dir}/server",
-    '7' => $jboss::real_jboss_dir,
+  $real_instance_basedir = $version ? {
+    '4' => "${real_jboss_dir}/server",
+    '5' => "${real_jboss_dir}/server",
+    '6' => "${real_jboss_dir}/server",
+    '7' => $real_jboss_dir,
   }
 
-  $real_config_dir = $jboss::config_dir ? {
-    ''      => $jboss::install ? {
+  $real_config_dir = $config_dir ? {
+    ''      => $install ? {
       package => $::operatingsystem ? {
         default => '/etc/jboss/',
       },
-      default => $jboss::version ? {
-        '4' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf",
-        '5' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf",
-        '6' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/conf",
-        '7' => "${jboss::real_jboss_dir}/${jboss::real_mode}/configuration",
+      default => $version ? {
+        '4' => "${real_jboss_dir}/server/${real_mode}/conf",
+        '5' => "${real_jboss_dir}/server/${real_mode}/conf",
+        '6' => "${real_jboss_dir}/server/${real_mode}/conf",
+        '7' => "${real_jboss_dir}/${real_mode}/configuration",
       },
     },
-    default => $jboss::config_dir,
+    default => $config_dir,
   }
 
-  $real_data_dir = $jboss::data_dir ? {
-    ''      => $jboss::install ? {
+  $real_data_dir = $data_dir ? {
+    ''      => $install ? {
       package => $::operatingsystem ? {
         default => '/usr/share/jboss/',
       },
-      default => $jboss::version ? {
-        '4' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/webapps",
-        '5' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/webapps",
-        '6' => "${jboss::real_jboss_dir}/server/${jboss::real_mode}/webapps",
-        '7' => "${jboss::real_jboss_dir}/${jboss::real_mode}/deployments",
+      default => $version ? {
+        '4' => "${real_jboss_dir}/server/${real_mode}/webapps",
+        '5' => "${real_jboss_dir}/server/${real_mode}/webapps",
+        '6' => "${real_jboss_dir}/server/${real_mode}/webapps",
+        '7' => "${real_jboss_dir}/${real_mode}/deployments",
       },
     },
-    default => $jboss::data_dir,
+    default => $data_dir,
   }
 
 
   ### Managed resources
-  # Installation is managed in a dedicated class
-  require jboss::install
+  include ::jboss::install
+  include ::jboss::service
+  include ::jboss::config
+
+  Class['jboss::install'] -> Class['jboss::config']
+  if $bool_service_autorestart {
+    Class['jboss::config'] ~> Class['jboss::service']
+  } else {
+    Class['jboss::config'] -> Class['jboss::service']
+  }
 
   # Service is managed in a dedicated class
   if $disable != '' {
     require jboss::service
   }
-
-  if ($jboss::source or $jboss::template) {
-    file { 'jboss.conf':
-      ensure  => $jboss::manage_file,
-      path    => $jboss::real_config_file,
-      mode    => $jboss::config_file_mode,
-      owner   => $jboss::config_file_owner,
-      group   => $jboss::config_file_group,
-      require => Class['jboss::install'],
-      notify  => $jboss::manage_service_autorestart,
-      source  => $jboss::manage_file_source,
-      content => $jboss::manage_file_content,
-      replace => $jboss::manage_file_replace,
-      audit   => $jboss::manage_audit,
-    }
-  }
-
-  # The whole jboss configuration directory can be recursively overriden
-  if $jboss::source_dir {
-    file { 'jboss.dir':
-      ensure  => directory,
-      path    => $jboss::real_config_dir,
-      require => Class['jboss::install'],
-      notify  => $jboss::manage_service_autorestart,
-      source  => $source_dir,
-      recurse => true,
-      purge   => $jboss::bool_source_dir_purge,
-      replace => $jboss::manage_file_replace,
-      audit   => $jboss::manage_audit,
-    }
-  }
-
-  if ! $jboss::conf_script_template == '' {
-    file { 'jboss.script.conf':
-      ensure  => $jboss::manage_file,
-      path    => $jboss::real_conf_script_path,
-      mode    => $jboss::config_file_mode,
-      owner   => $jboss::config_file_owner,
-      group   => $jboss::config_file_group,
-      require => Class['jboss::install'],
-      notify  => $jboss::manage_service_autorestart,
-      content => template($jboss::conf_script_template),
-      replace => $jboss::manage_file_replace,
-      audit   => $jboss::manage_audit,
-    }
-  }
-
   ### Include custom class if $my_class is set
-  if $jboss::my_class {
-    include $jboss::my_class
+  if $my_class and $my_class != '' {
+    include $my_class
   }
 
   ### Provide puppi data, if enabled ( puppi => true )
-  if $jboss::bool_puppi == true {
+  if $bool_puppi == true {
     $classvars=get_class_args()
     puppi::ze { 'jboss':
-      ensure    => $jboss::manage_file,
+      ensure    => $manage_file,
       variables => $classvars,
-      helper    => $jboss::puppi_helper,
+      helper    => $puppi_helper,
     }
   }
 
 
   ### Debugging, if enabled ( debug => true )
-  if $jboss::bool_debug == true {
+  if $bool_debug == true {
     file { 'debug_jboss':
-      ensure  => $jboss::manage_file,
+      ensure  => $manage_file,
       path    => "${settings::vardir}/debug-jboss",
       mode    => '0640',
       owner   => 'root',

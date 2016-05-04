@@ -2,7 +2,7 @@
 
 This is a Puppet jboss module from the second generation of Example42 Puppet Modules.
 
-Made by Alessandro Franceschi / Lab42
+Development by example42
 
 Official site: http://www.example42.com
 

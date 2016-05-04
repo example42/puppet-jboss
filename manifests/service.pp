@@ -13,78 +13,76 @@
 #
 class jboss::service inherits jboss {
 
-  case $jboss::install {
+  case $::jboss::install {
 
     package: {
       service { 'jboss':
-        ensure    => $jboss::manage_service_ensure,
-        name      => $jboss::service,
-        enable    => $jboss::manage_service_enable,
-        hasstatus => $jboss::service_status,
-        pattern   => $jboss::process,
-        require   => $jboss::package,
+        ensure    => $::jboss::manage_service_ensure,
+        name      => $::jboss::service,
+        enable    => $::jboss::manage_service_enable,
+        hasstatus => $::jboss::service_status,
+        pattern   => $::jboss::process,
+        require   => Class['jboss::install'],
       }
     }
 
     source,puppi: {
-      service { 'jboss':
-        ensure    => $jboss::manage_service_ensure,
-        name      => $jboss::service,
-        enable    => $jboss::manage_service_enable,
-        hasstatus => $jboss::service_status,
-        pattern   => $jboss::process,
-        require   => File['jboss.init'],
-      }
       file { 'jboss.init':
-        ensure  => $jboss::manage_file,
+        ensure  => $::jboss::manage_file,
         path    => '/etc/init.d/jboss',
         mode    => '0755',
-        owner   => $jboss::config_file_owner,
-        group   => $jboss::config_file_group,
+        owner   => $::jboss::config_file_owner,
+        group   => $::jboss::config_file_group,
         require => Class['jboss::install'],
-        notify  => $jboss::manage_service_autorestart,
-        content => template($jboss::real_init_script_template),
-        audit   => $jboss::manage_audit,
+        content => template($::jboss::real_init_script_template),
+        audit   => $::jboss::manage_audit,
+      } ->
+      service { 'jboss':
+        ensure    => $::jboss::manage_service_ensure,
+        name      => $::jboss::service,
+        enable    => $::jboss::manage_service_enable,
+        hasstatus => $::jboss::service_status,
+        pattern   => $::jboss::process,
+        require   => Class['jboss::install'],
       }
     }
 
     default: { }
-
   }
 
 
   ### Service monitoring, if enabled ( monitor => true )
-  if $jboss::bool_monitor == true {
+  if $::jboss::bool_monitor == true {
     monitor::port { "jboss_${jboss::protocol}_${jboss::port}":
-      protocol => $jboss::protocol,
-      port     => $jboss::port,
-      target   => $jboss::monitor_target,
-      tool     => $jboss::monitor_tool,
-      enable   => $jboss::manage_monitor,
+      protocol => $::jboss::protocol,
+      port     => $::jboss::port,
+      target   => $::jboss::monitor_target,
+      tool     => $::jboss::monitor_tool,
+      enable   => $::jboss::manage_monitor,
     }
     monitor::process { 'jboss_process':
-      process  => $jboss::process,
-      service  => $jboss::service,
-      pidfile  => $jboss::pid_file,
-      user     => $jboss::process_user,
-      argument => $jboss::process_args,
-      tool     => $jboss::monitor_tool,
-      enable   => $jboss::manage_monitor,
+      process  => $::jboss::process,
+      service  => $::jboss::service,
+      pidfile  => $::jboss::pid_file,
+      user     => $::jboss::process_user,
+      argument => $::jboss::process_args,
+      tool     => $::jboss::monitor_tool,
+      enable   => $::jboss::manage_monitor,
     }
   }
 
 
   ### Firewall management, if enabled ( firewall => true )
-  if $jboss::bool_firewall == true {
+  if $::jboss::bool_firewall == true {
     firewall { "jboss_${jboss::protocol}_${jboss::port}":
-      source      => $jboss::firewall_src,
-      destination => $jboss::firewall_dst,
-      protocol    => $jboss::protocol,
-      port        => $jboss::port,
+      source      => $::jboss::firewall_src,
+      destination => $::jboss::firewall_dst,
+      protocol    => $::jboss::protocol,
+      port        => $::jboss::port,
       action      => 'allow',
       direction   => 'input',
-      tool        => $jboss::firewall_tool,
-      enable      => $jboss::manage_firewall,
+      tool        => $::jboss::firewall_tool,
+      enable      => $::jboss::manage_firewall,
     }
   }
 
