@@ -11,6 +11,29 @@
 #
 # == Parameters
 #
+# [*instance*]
+#   The name of the instance you want to manage.
+#   The directory name under which the instance specific files will be stored.
+#   Default: $name.
+#
+# [*configuration*]
+#   This is only required on Jboss 7. Depending on the mode you run in
+#   there are several predefined configurations to chose from:
+#
+#   standalone:
+#     * standalone-full-ha.xml
+#     * standalone-full.xml
+#     * standalone-ha.xml
+#     * standalone.xml
+#
+#   domain:
+#     * domain.xml
+#     * host-master.xml
+#     * host-slave.xml
+#     * host.xml
+#
+#   Default: ''. Use the Jboss default.
+#
 # [*user*]
 #   The user with which the instance will be running 
 #   Default: jboss. You can have multiple instances using the same user but 
@@ -90,7 +113,8 @@
 #    jboss::instance { "myapp": }
 #
 # More elaborated examples:
-#    jboss::instance { "myapp":
+#    jboss::instance { "elaborate titel different from myapp":
+#        instance      => "myapp"    # Default is $name
 #        user          => "myapp",   # Default is jboss
 #        userid        => "450",     # Default is unset
 #        group         => "myapp",   # Default is jboss
@@ -107,6 +131,8 @@
 #    }
 #
 define jboss::instance (
+  $instance      = $name,
+  $configuration = '',
   $user          = 'jboss',
   $userid        = '',
   $group         = 'jboss',
@@ -137,6 +163,11 @@ define jboss::instance (
 
   if ! is_integer($init_timeout) {
     fail('Variable init_timeout is not an integer')
+  }
+
+  $real_configuration = $jboss::version?{
+    7 => $configuration,
+    default => $name
   }
 
   $real_template = $template ? {
